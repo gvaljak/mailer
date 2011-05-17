@@ -1,5 +1,4 @@
-package hr.element.etb.mailer
-
+import hr.element.etb.mailer.EtbMailer
 
 import net.liftweb.util.Mailer
 import net.liftweb.util.Mailer._
@@ -38,7 +37,7 @@ object Testo {
 
     val html = formatXML(xml)
 
-    val etbMailer = new EtbMailer
+    val etbMailer = new EtbMailer("kaligula.element.hr", "gordan", "gvimbddm")
 
     etbMailer.send(
         From("gordan@element.hr"),
