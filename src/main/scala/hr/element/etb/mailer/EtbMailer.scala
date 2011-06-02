@@ -13,7 +13,7 @@ import javax.mail._
 
 
 import net.liftweb.util.Mailer
-import net.liftweb.util.Mailer._
+//import net.liftweb.util.Mailer._
 
 import hr.element.etb.mailer.sql._
 
@@ -29,6 +29,8 @@ import net.lag.configgy.Configgy
 
 
 class EtbMailer(configPath: String) {
+
+  import EtbMailer._
 
   lazy val config = getConfig
   lazy val db = getDb
@@ -74,13 +76,65 @@ class EtbMailer(configPath: String) {
     })
   }
 
-  def send(from: From, subject: Subject, rest: MailTypes*): Either[String, Exception] = {
-    db.insertMail(from, subject, rest: _*)
+//  sealed trait MailAttachments
+
+  def send(
+      from: From,
+      subject: Subject,
+      textBody: TextBody,
+      htmlBody: Option[HtmlBody],
+      addresses: Seq[EmailAddress],
+      attachments: Option[Seq[AttachmentFile]]): Either[Exception, String] = {
+
+    db.insertMail(from, subject, textBody, htmlBody, addresses, attachments)
+
 //    sendMail(from, subject, rest: _*)
   }
 
   def error(msg: String) =
     throw new Error(msg)
+}
 
+import scala.xml.NodeSeq
+import org.apache.commons.codec.binary.Base64
+import java.security.MessageDigest
+
+object EtbMailer {
+
+  sealed trait MailData
+
+  case class Subject(subject: String) extends MailData
+
+  abstract class EmailAddress(val name: Option[String], val address: String) extends MailData {
+    val getAddress = address
+    val getType = this.getClass.getSimpleName
+  }
+
+  case class From(name: Option[String], address: String) extends EmailAddress(name, address)
+
+  case class To(name: Option[String], address: String) extends EmailAddress(name, address) {
+  }
+
+  case class CC(name: Option[String], address: String) extends EmailAddress(name, address) {
+  }
+
+  case class BCC(name: Option[String], address: String) extends EmailAddress(name, address) {
+  }
+
+  case class TextBody(text: String) extends MailData
+  case class HtmlBody(html: NodeSeq) extends MailData
+
+  case class AttachmentFile(fileName: String, mimeType: String, bytes: Array[Byte]) {
+
+    def md5(bytes: Array[Byte]): Array[Byte] = {
+      MessageDigest.getInstance("MD5").digest(bytes)
+    }
+
+    lazy val ExtRegex = """^.*\.([^\.]+)$""".r
+    lazy val ExtRegex(ext) = fileName
+    lazy val body = Base64.encodeBase64(bytes)
+    lazy val hash = md5(body)
+    lazy val size = body.size
+  }
 }
 

@@ -187,14 +187,13 @@ CREATE TABLE mail2addresses
   address text NOT NULL, -- Recipient email address
   queued_at timestamptz NOT NULL, -- Time when queued for sending
   sent_at timestamptz, -- Time when sent to recipient
-  bounced integer NOT NULL, -- Number of e-mail boomerangs (manual increment)
+  bounced integer NOT NULL DEFAULT 0, -- Number of e-mail boomerangs (manual increment)
   created_at timestamptz NOT NULL DEFAULT now(), -- Time fo row creation
   updated_at timestamptz NOT NULL DEFAULT now(), -- Time of row update
   CONSTRAINT pk_etb_mail2addresses_id PRIMARY KEY (id),
   CONSTRAINT fk_etb_mail2addresses_mail_id_2_etb_mail_id FOREIGN KEY (mail_id)
       REFERENCES mail (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT ck_etb_mail_bounced CHECK (bounced > 0)
+      ON UPDATE NO ACTION ON DELETE NO ACTION
 )
 WITH (
   OIDS=FALSE

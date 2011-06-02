@@ -22,10 +22,10 @@ trait BaseEntity extends KeyedEntity[Long] {
  * Represents file_type table with all allowed file types
  */
 case class FileType(
-  val ext : String,
-  val alt : Option[String],
-  val `type` : String,
-  val mime : String) extends BaseEntity {
+  ext : String,
+  alt : Option[String],
+  `type` : String,
+  mime : String) extends BaseEntity {
 
   def this() = this("", Some(""), "", "")
 
@@ -73,9 +73,9 @@ class Mail2Addresses(
     val queuedAt: Timestamp,
     @Column("sent_at")
     val sentAt: Option[Timestamp],
-    val bounced: Option[Int]) extends BaseEntity {
+    val bounced: Int) extends BaseEntity {
 
-  def this() = this(0L, "", "", new Timestamp(0), Some(new Timestamp(0)), Some(0))
+  def this() = this(0L, "", "", new Timestamp(0), Some(new Timestamp(0)), 0)
 }
 
 object Etb extends Schema {

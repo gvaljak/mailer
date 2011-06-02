@@ -7,7 +7,8 @@ import org.apache.commons.io.FileUtils
 
 import scala.xml._
 
-import hr.element.etb.mailer.EtbMailer
+import hr.element.etb.mailer._
+import EtbMailer._
 
 class MailTest extends FeatureSpec with GivenWhenThen {
 
@@ -24,11 +25,11 @@ class MailTest extends FeatureSpec with GivenWhenThen {
 
       given("two file attachments, text and html body")
 
-      val fileo = FileUtils.readFileToByteArray(new File("r:\\mail-test.pdf"))
-      val sliko = FileUtils.readFileToByteArray(new File("r:\\mail-test.png"))
+      val filobajts = FileUtils.readFileToByteArray(new File("r:\\mail-test.pdf"))
+      val slikobajts = FileUtils.readFileToByteArray(new File("r:\\mail-test.png"))
 
-      val attachment = Attachment("testo.pdf", "application/pdf", fileo)
-      val inlineImg = Attachment("testo.png", "image/png", sliko)
+      val pdfo = AttachmentFile("testo.pdf", "application/pdf", filobajts)
+      val sliko = AttachmentFile("testo.png", "image/png", slikobajts)
 
       val text = "ŠĐČĆŽšđčćž akuk  ukukuuukk  kuikzmkizmizik kizikzk ikzikz kizkiz ikzkizki zkk ikz kzikzk zk zki zk zkkiz ikz kuzkuz ukzukzk kzk uzuk zuk  ukz kuz kuzukzk zuk zk zkz kzuk zkzku zkuzkuzkuz ku zk uz ku zku z ukz k"
 
@@ -45,16 +46,20 @@ class MailTest extends FeatureSpec with GivenWhenThen {
       val etbMailer = new EtbMailer("src/test/resources/mailer.conf")
 
       then("Email is sent with given parameters")
-      etbMailer.send(
-          From("gordan@element.hr"),
-          Subject("dobar dan"),
-          To("cehtunger@gmail.com"),
-          PlainMailBodyType(text),
-          CC("gordan@dreampostcards.com"),
-          BCC("gordan.valjak@zg.t-com.hr"),
-          XHTMLMailBodyType(html),
-          XHTMLPlusImages(html, inlineImg, attachment)
-        )
+      val inserto =
+        etbMailer.send(
+            From(None, "gordan@element.hr"),
+            Subject("dobar dan"),
+            TextBody(text),
+            Some(HtmlBody(xml)),
+            Seq(
+              To("cehtunger@gmail.com"),
+              CC("gordan@dreampostcards.com"),
+              BCC("gordan.valjak@zg.t-com.hr")),
+            Some(Seq(pdfo, sliko))
+          )
+
+      println(inserto)
     }
   }
 }
