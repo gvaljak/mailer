@@ -34,58 +34,77 @@ case class FileType(
 }
 
 case class Attachment(
-  @Column("file_type_ext") val fileExt : String,
-  val filename : String,
-  val size : Int,
-  val body : Array[Byte],
-  val hash : Array[Byte],
-  @Column("mod_time") val modTime : Timestamp,
-  @Column("uploaded_at") val uploadedAt : Timestamp) extends BaseEntity {
+    @Column("file_type_ext") val fileExt : String,
+    val filename : String,
+    val size : Int,
+    val body : Array[Byte],
+    val hash : Array[Byte],
+    @Column("mod_time") val modTime : Timestamp,
+    @Column("uploaded_at") val uploadedAt : Timestamp) extends BaseEntity {
 
   //  lazy val mails = Etb.mailToAttachments.right(this)
 }
 
-class MailQueue(
-  @Column("sent_from") val sentFrom : String,
-  @Column("sent_to") val sentTo : String,
-  val subject : String,
-  @Column("text_body") val textBody : String,
-  @Column("html_body") val htmlBody : Option[String],
-  @Column("queued_at") val queuedAt : Option[Timestamp],
-  @Column("sent_at") val sentAt : Option[Timestamp],
-  val bounced : Option[Int]) extends BaseEntity {
+class Mail(
+    @Column("sent_from")
+    val sentFrom : String,
+    val subject : String,
+    @Column("text_body")
+    val textBody : String,
+    @Column("html_body")
+    val htmlBody : Option[String]) extends BaseEntity {
 
   //  lazy val attachments = Etb.mailToAttachments.left(this)
 
-  def this() = this("", "", "", "", Some(""), Some(new Timestamp(System.currentTimeMillis)), Some(new Timestamp(System.currentTimeMillis)), Some(0))
+  def this() = this("", "", "", Some(""))
 }
 
 class Mail2Attachments(
   @Column("mail_id") val mailId : Long,
   @Column("attachments_id") val attachmentsId : Long) extends BaseEntity
 
+class Mail2Addresses(
+    @Column("mail_id")
+    val mailId: Long,
+    @Column("field_type")
+    val fieldType: String,
+    val address: String,
+    @Column("queued_at")
+    val queuedAt: Timestamp,
+    @Column("sent_at")
+    val sentAt: Option[Timestamp],
+    val bounced: Option[Int]) extends BaseEntity {
+
+  def this() = this(0L, "", "", new Timestamp(0), Some(new Timestamp(0)), Some(0))
+}
+
 object Etb extends Schema {
   val fileType = table[FileType]("file_type")
-  val attachments = table[Attachment]("attachments")
-  val mailQueue = table[MailQueue]("mail_queue")
-  //  val mail2Attachments = table[mail2attachments]
+  val attachment = table[Attachment]("attachment")
+  val mail = table[Mail]("mail")
+  val mail2Attachments = table[Mail2Attachments]("mail2attachments")
+  val mail2Addresses = table[Mail2Addresses]("mail2addresses")
 
-  val mailToAttachments =
-    manyToManyRelation(mailQueue, attachments, "mail2attachments").
-      via[Mail2Attachments]((m, a, ma) => (m.id === ma.mailId, a.id === ma.attachmentsId))
+//  val mailToAttachments =
+//    manyToManyRelation(mailQueue, attachments, "mail2attachments").
+//      via[Mail2Attachments]((m, a, ma) => (m.id === ma.mailId, a.id === ma.attachmentsId))
 
   on(fileType)(ft => declare(
     ft.id is (primaryKey, autoIncremented("seq_file_type")),
     ft.ext is (unique),
     ft.`type` is (indexed)))
 
-  on(attachments)(att => declare(
-    att.id is (primaryKey, autoIncremented("seq_attachments"))))
+  on(attachment)(att => declare(
+    att.id is (primaryKey, autoIncremented("seq_attachment"))))
 
-  on(mailQueue)(mq => declare(
-    mq.id is (primaryKey, autoIncremented("seq_mail_queue"))))
+  on(mail)(mq => declare(
+    mq.id is (primaryKey, autoIncremented("seq_mail"))))
 
-  //  on(mail2attachments)(m2a => declare(
-  //    m2a.id is(primaryKey, autoIncremented("seq_mail2attachments"))
-  //  ))
+  on(mail2Attachments)(m2at => declare(
+    m2at.id is(primaryKey, autoIncremented("seq_mail2attachments"))
+  ))
+
+  on(mail2Addresses)(m2ad => declare(
+    m2ad.id is(primaryKey, autoIncremented("seq_mail2addresses"))
+  ))
 }

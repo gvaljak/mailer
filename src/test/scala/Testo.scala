@@ -1,8 +1,6 @@
 import org.scalatest.FeatureSpec
 import org.scalatest.GivenWhenThen
 
-import net.liftweb.util.Mailer
-import net.liftweb.util.Mailer._
 
 import java.io.File
 import org.apache.commons.io.FileUtils
@@ -29,8 +27,8 @@ class MailTest extends FeatureSpec with GivenWhenThen {
       val fileo = FileUtils.readFileToByteArray(new File("r:\\mail-test.pdf"))
       val sliko = FileUtils.readFileToByteArray(new File("r:\\mail-test.png"))
 
-      val attachment = PlusImageHolder("testo.pdf", "application/pdf", fileo)
-      val inlineImg = PlusImageHolder("testo.png", "image/png", sliko)
+      val attachment = Attachment("testo.pdf", "application/pdf", fileo)
+      val inlineImg = Attachment("testo.png", "image/png", sliko)
 
       val text = "ŠĐČĆŽšđčćž akuk  ukukuuukk  kuikzmkizmizik kizikzk ikzikz kizkiz ikzkizki zkk ikz kzikzk zk zki zk zkkiz ikz kuzkuz ukzukzk kzk uzuk zuk  ukz kuz kuzukzk zuk zk zkz kzuk zkzku zkuzkuzkuz ku zk uz ku zku z ukz k"
 
@@ -44,7 +42,7 @@ class MailTest extends FeatureSpec with GivenWhenThen {
       val html = formatXML(xml)
 
       when("ETBMailer is initialised")
-      val etbMailer = new EtbMailer()
+      val etbMailer = new EtbMailer("src/test/resources/mailer.conf")
 
       then("Email is sent with given parameters")
       etbMailer.send(

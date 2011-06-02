@@ -19,7 +19,16 @@ import hr.element.etb.mailer.sql._
 
 import net.lag.configgy.Configgy
 
-class EtbMailer {
+
+/**
+ *  EtbMailer
+ *
+ *  configPath specifies location of config file
+ *  example of config file can be found in src/main/resources
+ */
+
+
+class EtbMailer(configPath: String) {
 
   lazy val config = getConfig
   lazy val db = getDb
@@ -27,7 +36,7 @@ class EtbMailer {
   configureMail()
 
   def getConfig = {
-    Configgy.configure("src/test/resources/mailer.conf")
+    Configgy.configure(configPath)
     Configgy.config
   }
 
@@ -65,7 +74,7 @@ class EtbMailer {
     })
   }
 
-  def send(from: From, subject: Subject, rest: MailTypes*) {
+  def send(from: From, subject: Subject, rest: MailTypes*): Either[String, Exception] = {
     db.insertMail(from, subject, rest: _*)
 //    sendMail(from, subject, rest: _*)
   }
