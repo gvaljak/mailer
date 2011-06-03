@@ -204,6 +204,11 @@ rem ###############################################################
 
 :PROCESS_PARAM
 
+if "%~1"=="--kill" (
+  taskkill /f /im java.exe
+  goto :EOF
+)
+
 if "%~1"=="--jrebel" (
   if exist "%JREBEL_HOME%\jrebel.jar" set JVM_PARAMS=%JVM_PARAMS% -noverify -javaagent:%JREBEL_HOME%\jrebel.jar -XX:+CMSClassUnloadingEnabled
   goto :EOF

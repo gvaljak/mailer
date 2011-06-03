@@ -45,7 +45,7 @@ case class Attachment(
   //  lazy val mails = Etb.mailToAttachments.right(this)
 }
 
-class Mail(
+case class Mail(
     @Column("sent_from")
     val sentFrom : String,
     val subject : String,
@@ -59,11 +59,11 @@ class Mail(
   def this() = this("", "", "", Some(""))
 }
 
-class Mail2Attachments(
+case class Mail2Attachments(
   @Column("mail_id") val mailId : Long,
-  @Column("attachments_id") val attachmentsId : Long) extends BaseEntity
+  @Column("attachment_id") val attachmentsId : Long) extends BaseEntity
 
-class Mail2Addresses(
+case class Mail2Addresses(
     @Column("mail_id")
     val mailId: Long,
     @Column("field_type")

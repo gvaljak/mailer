@@ -84,7 +84,7 @@ class EtbMailer(configPath: String) {
       textBody: TextBody,
       htmlBody: Option[HtmlBody],
       addresses: Seq[EmailAddress],
-      attachments: Option[Seq[AttachmentFile]]): Either[Exception, String] = {
+      attachments: Option[Seq[AttachmentFile]]): Either[Exception, _] = {
 
     db.insertMail(from, subject, textBody, htmlBody, addresses, attachments)
 
@@ -105,21 +105,18 @@ object EtbMailer {
 
   case class Subject(subject: String) extends MailData
 
-  abstract class EmailAddress(val name: Option[String], val address: String) extends MailData {
-    val getAddress = address
+  abstract class EmailAddress extends MailData {
+    val address: String
     val getType = this.getClass.getSimpleName
   }
 
-  case class From(name: Option[String], address: String) extends EmailAddress(name, address)
+  case class From(address: String) extends EmailAddress
 
-  case class To(name: Option[String], address: String) extends EmailAddress(name, address) {
-  }
+  case class To(address: String) extends EmailAddress
 
-  case class CC(name: Option[String], address: String) extends EmailAddress(name, address) {
-  }
+  case class CC(address: String) extends EmailAddress
 
-  case class BCC(name: Option[String], address: String) extends EmailAddress(name, address) {
-  }
+  case class BCC(address: String) extends EmailAddress
 
   case class TextBody(text: String) extends MailData
   case class HtmlBody(html: NodeSeq) extends MailData

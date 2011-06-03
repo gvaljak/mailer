@@ -1,6 +1,6 @@
 import org.scalatest.FeatureSpec
 import org.scalatest.GivenWhenThen
-
+import org.scalatest.matchers.MustMatchers
 
 import java.io.File
 import org.apache.commons.io.FileUtils
@@ -10,7 +10,7 @@ import scala.xml._
 import hr.element.etb.mailer._
 import EtbMailer._
 
-class MailTest extends FeatureSpec with GivenWhenThen {
+class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
 
   lazy val prettyPrinter = new scala.xml.PrettyPrinter(80,2)
 
@@ -42,13 +42,12 @@ class MailTest extends FeatureSpec with GivenWhenThen {
 
       val html = formatXML(xml)
 
-      when("ETBMailer is initialised")
+      when("ETBMailer is initialised and mail is sent")
       val etbMailer = new EtbMailer("src/test/resources/mailer.conf")
 
-      then("Email is sent with given parameters")
       val inserto =
         etbMailer.send(
-            From(None, "gordan@element.hr"),
+            From("gordan@element.hr"),
             Subject("dobar dan"),
             TextBody(text),
             Some(HtmlBody(xml)),
@@ -58,30 +57,9 @@ class MailTest extends FeatureSpec with GivenWhenThen {
               BCC("gordan.valjak@zg.t-com.hr")),
             Some(Seq(pdfo, sliko))
           )
+      then("""Function must return "Success"""")
 
-      println(inserto)
+      inserto must be === Right("Success")
     }
   }
 }
-
-//import hr.element.etb.mailer.EtbMailer
-//
-//object Testo {
-//
-//
-//  def main(args: Array[String]) {
-//
-//    println("mainoooo")
-//
-//
-//    val fileo = FileUtils.readFileToByteArray(new File("r:\\mail-test.pdf"))
-//    val sliko = FileUtils.readFileToByteArray(new File("r:\\mail-test.png"))
-//
-//
-//    val etbMailer = new EtbMailer()
-//
-//
-//    Thread.sleep(10000)
-//  }
-//
-//}

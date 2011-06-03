@@ -48,17 +48,30 @@ trait DbEtb {
     transTrye {
       val time = new Timestamp(System.currentTimeMillis)
       val html = for{h <- htmlBody} yield h.html.toString
-      val newMail = new Mail(from.address, subject.subject, textBody.text, html)
+      val newMail = Mail(from.address, subject.subject, textBody.text, html)
 
       mail.insert(newMail)
 
-      val addressList = createAddressList(addresses, newMail.id, time)
-      addressList.foreach(add => mail2Addresses.insert(add))
+      val a =
+      attachments match {
+        case Some(aFL) => {
+          for(attFile <- aFL) yield {
+            val att = Attachment(attFile.ext, attFile.fileName, attFile.size, attFile.body, attFile.hash, time, time)
+            attachment.insert(att)
+            val m2a = Mail2Attachments(newMail.id, att.id)
+            mail2Attachments.insert(m2a)
+            m2a
+          }
+        }
+        case None =>
+      }
 
-      val attachmentList = createAttachments(attachments, newMail.id, time)
-      attachmentList.map(_.foreach(att => attachment.insert(att)))
+      for(address <- addresses) yield {
+        val m2a = Mail2Addresses(newMail.id, address.getType, address.address, time, None, 0)
+        mail2Addresses.insert(m2a)
+      }
 
-      "asdfsfd"
+      "Success"
     }
   }
 }

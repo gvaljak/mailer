@@ -2,7 +2,7 @@ package hr.element.etb.mailer.sql
 
 import org.squeryl.{ Session, Schema, SessionFactory }
 import org.squeryl.adapters.PostgreSqlAdapter
-import org.squeryl.PrimitiveTypeMode._
+//import org.squeryl.PrimitiveTypeMode._
 
 class DbEtbPostgres(
   host : String,
