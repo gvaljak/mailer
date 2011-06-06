@@ -7,6 +7,10 @@ import org.squeryl.KeyedEntity
 import org.squeryl.annotations.Column
 import java.sql.Timestamp
 
+import hr.element.etb.mailer.EtbMailer._
+
+import scala.xml.XML
+
 /**
  * Base entity trait defines common fields for all tables
  */
@@ -57,7 +61,17 @@ case class Mail(
   //  lazy val attachments = Etb.mailToAttachments.left(this)
 
   def this() = this("", "", "", Some(""))
+
+  def getFrom = From(sentFrom)
+  def getSubject = Subject(subject)
+  def getTextBody = TextBody(textBody)
+  def getHtmlBody =
+    htmlBody match {
+      case Some(h) => Some(HtmlBody(XML.loadString(h)))
+      case _ => None
+    }
 }
+
 
 case class Mail2Attachments(
   @Column("mail_id") val mailId : Long,

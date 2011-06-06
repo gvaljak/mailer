@@ -45,18 +45,20 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
       when("ETBMailer is initialised and mail is sent")
       val etbMailer = new EtbMailer("src/test/resources/mailer.conf")
 
-      val inserto =
-        etbMailer.send(
-            From("gordan@element.hr"),
-            Subject("dobar dan"),
-            TextBody(text),
-            Some(HtmlBody(xml)),
-            Seq(
-              To("cehtunger@gmail.com"),
-              CC("gordan@dreampostcards.com"),
-              BCC("gordan.valjak@zg.t-com.hr")),
-            Some(Seq(pdfo, sliko))
-          )
+      val inserto = //Right("asdfsfad")
+        etbMailer.sendFromDb(165)
+
+//        etbMailer.send(
+//            From("gordan@element.hr"),
+//            Subject("dobar dan"),
+//            TextBody(text),
+//            Some(HtmlBody(xml)),
+//            Seq(
+//              To("cehtunger@gmail.com"),
+//              CC("gordan@dreampostcards.com"),
+//              BCC("gordan.valjak@zg.t-com.hr")),
+//            Some(Seq(pdfo, sliko))
+//          )
       then("""Function must return "Success"""")
 
       inserto must be === Right("Success")

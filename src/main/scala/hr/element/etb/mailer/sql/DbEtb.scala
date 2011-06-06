@@ -74,4 +74,24 @@ trait DbEtb {
       "Success"
     }
   }
+
+
+  def getMail(mailId: Long) = {
+    val mailFromDb =
+      transTrye {
+        join(mail, mail2Addresses.leftOuter)((m, m2a) =>
+          select(m, m2a) on (m.id === m2a.map(_.mailId))
+        )
+
+//        mail.where(m => m.id === mailId).single
+//        mail.lookup(mailId)
+//        from(mail)(m => where(m.id === mailId) select(m))
+      }
+    mailFromDb match {// getOrElse(error("There is no mail with id = " + mailId))
+      case Right((m,a)) => m get
+      case Left(l) => throw l
+    }
+  }
+
+//  def getAddresses(mailId: Long) =
 }

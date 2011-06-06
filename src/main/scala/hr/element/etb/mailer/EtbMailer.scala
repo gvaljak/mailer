@@ -91,6 +91,25 @@ class EtbMailer(configPath: String) {
 //    sendMail(from, subject, rest: _*)
   }
 
+  def sendFromDb(mailId: Long) = {
+
+    try {
+      val mailToSend = db.getMail(mailId)
+
+      val from = mailToSend.getFrom
+      val subject = mailToSend.getSubject
+      val textBody = mailToSend.getTextBody
+      val htmlBody = mailToSend.getHtmlBody
+
+//      val addresses = db.getAddresses
+
+      Right("Success")
+    }
+    catch {
+      case e: Exception => Left(e)
+    }
+  }
+
   def error(msg: String) =
     throw new Error(msg)
 }
