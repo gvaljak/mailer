@@ -1,10 +1,10 @@
 package hr.element.etb.mailer.sql
 
-import org.squeryl.{ Schema }
+import org.squeryl.{ Schema, KeyedEntity }
 import org.squeryl.PrimitiveTypeMode._
-
-import org.squeryl.KeyedEntity
 import org.squeryl.annotations.Column
+import org.squeryl.dsl.{OneToMany, ManyToOne}
+
 import java.sql.Timestamp
 
 import hr.element.etb.mailer.EtbMailer._
@@ -37,18 +37,6 @@ case class FileType(
     "("+ext+", "+alt+", "+`type`+", "+mime+")"
 }
 
-case class Attachment(
-    @Column("file_type_ext") val fileExt : String,
-    val filename : String,
-    val size : Int,
-    val body : Array[Byte],
-    val hash : Array[Byte],
-    @Column("mod_time") val modTime : Timestamp,
-    @Column("uploaded_at") val uploadedAt : Timestamp) extends BaseEntity {
-
-  //  lazy val mails = Etb.mailToAttachments.right(this)
-}
-
 case class Mail(
     @Column("sent_from")
     val sentFrom : String,
@@ -58,7 +46,9 @@ case class Mail(
     @Column("html_body")
     val htmlBody : Option[String]) extends BaseEntity {
 
-  //  lazy val attachments = Etb.mailToAttachments.left(this)
+
+  lazy val addresses: OneToMany[Address] = Etb.mail2Addresses.left(this)
+  lazy val attachments = Etb.mail2Attachments.left(this)
 
   def this() = this("", "", "", Some(""))
 
@@ -72,12 +62,7 @@ case class Mail(
     }
 }
 
-
-case class Mail2Attachments(
-  @Column("mail_id") val mailId : Long,
-  @Column("attachment_id") val attachmentsId : Long) extends BaseEntity
-
-case class Mail2Addresses(
+case class Address(
     @Column("mail_id")
     val mailId: Long,
     @Column("field_type")
@@ -89,19 +74,55 @@ case class Mail2Addresses(
     val sentAt: Option[Timestamp],
     val bounced: Int) extends BaseEntity {
 
+  lazy val mailo: ManyToOne[Mail] = Etb.mail2Addresses.right(this)
+
   def this() = this(0L, "", "", new Timestamp(0), Some(new Timestamp(0)), 0)
+
+  override def toString = "mailId: "+mailId
 }
+
+object Address {
+  def apply(fT: String, add: String, qAt: Timestamp): Address =
+    Address(0, fT, add, qAt, None, 0)
+}
+
+case class Attachment(
+    @Column("file_type_ext") val fileExt : String,
+    val filename : String,
+    val size : Int,
+    val body : Array[Byte],
+    val hash : Array[Byte],
+    @Column("mod_time") val modTime : Timestamp,
+    @Column("uploaded_at") val uploadedAt : Timestamp) extends BaseEntity {
+
+    lazy val mails = Etb.mail2Attachments.right(this)
+}
+
+
+case class Mail2Attachments(
+    @Column("mail_id")
+    val mailId : Long,
+    @Column("attachment_id")
+    val attachmentId : Long) extends BaseEntity {
+
+  override def toString = "mailID: " + mailId + " attachmentId: " + attachmentId
+}
+
 
 object Etb extends Schema {
   val fileType = table[FileType]("file_type")
   val attachment = table[Attachment]("attachment")
   val mail = table[Mail]("mail")
-  val mail2Attachments = table[Mail2Attachments]("mail2attachments")
-  val mail2Addresses = table[Mail2Addresses]("mail2addresses")
+//  val mail2Attachments = table[Mail2Attachments]("mail2attachments")
+  val address = table[Address]("address")
 
-//  val mailToAttachments =
-//    manyToManyRelation(mailQueue, attachments, "mail2attachments").
-//      via[Mail2Attachments]((m, a, ma) => (m.id === ma.mailId, a.id === ma.attachmentsId))
+  val mail2Addresses =
+    oneToManyRelation(mail, address).
+    via((m,a) => m.id === a.mailId)
+
+  val mail2Attachments =
+    manyToManyRelation(mail, attachment, "mail2attachments").
+      via[Mail2Attachments]((m, a, ma) => (m.id === ma.mailId, a.id === ma.attachmentId))
 
   on(fileType)(ft => declare(
     ft.id is (primaryKey, autoIncremented("seq_file_type")),
@@ -118,7 +139,7 @@ object Etb extends Schema {
     m2at.id is(primaryKey, autoIncremented("seq_mail2attachments"))
   ))
 
-  on(mail2Addresses)(m2ad => declare(
-    m2ad.id is(primaryKey, autoIncremented("seq_mail2addresses"))
+  on(address)(m2ad => declare(
+    m2ad.id is(primaryKey, autoIncremented("seq_address"))
   ))
 }

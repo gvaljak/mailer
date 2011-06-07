@@ -9,12 +9,20 @@ import hr.element.etb.mailer.EtbMailer._
 
 import Etb._
 import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.Query
+
 
 trait DbEtb {
   val DbHost: String
   val DbName: String
   val DbUsername: String
   val DbPassword: String
+
+//  implicit def wrapRichQuery[A,B](q: Query[(A,B)]) =
+//    new {
+//      def bag(f:((A,B)) => B) =
+//        q.toList.groupBy(_._1).mapValues(_.map(f))
+//    }
 
   def transTrye[T](f: => T): Either[Exception,T] =
     try transaction {
@@ -31,9 +39,9 @@ trait DbEtb {
     }}
   }
 
-  def createAddressList(addresses: Seq[EmailAddress], mailId: Long, time: Timestamp): Seq[Mail2Addresses] = {
+  def createAddressList(addresses: Seq[EmailAddress], mailId: Long, time: Timestamp): Seq[Address] = {
     addresses.map{rec =>
-      new Mail2Addresses(mailId, rec.getType, rec.address, time, None, 0)
+      new Address(mailId, rec.getType, rec.address, time, None, 0)
     }
   }
 
@@ -52,24 +60,28 @@ trait DbEtb {
 
       mail.insert(newMail)
 
-      val a =
-      attachments match {
-        case Some(aFL) => {
-          for(attFile <- aFL) yield {
-            val att = Attachment(attFile.ext, attFile.fileName, attFile.size, attFile.body, attFile.hash, time, time)
-            attachment.insert(att)
-            val m2a = Mail2Attachments(newMail.id, att.id)
-            mail2Attachments.insert(m2a)
-            m2a
-          }
+      val addToIns =
+        for(add <- addresses) yield {
+          val newAddress = Address(add.getType, add.address, time)
+          newMail.addresses.assign(newAddress)
         }
-        case None =>
+
+      address.insert(addToIns)
+
+      val attToIns =
+        attachments match {
+          case Some(aFL) => {
+            for(attFile <- aFL) yield {
+              val newAttachment = Attachment(attFile.ext, attFile.fileName, attFile.size, attFile.body, attFile.hash, time, time)
+              attachment.insert(newAttachment)
+              newMail.attachments.assign(newAttachment)
+            }
+          }
+          case None =>
+            Seq[Mail2Attachments]()
       }
 
-      for(address <- addresses) yield {
-        val m2a = Mail2Addresses(newMail.id, address.getType, address.address, time, None, 0)
-        mail2Addresses.insert(m2a)
-      }
+      mail2Attachments.insert(attToIns)
 
       "Success"
     }
@@ -77,21 +89,35 @@ trait DbEtb {
 
 
   def getMail(mailId: Long) = {
-    val mailFromDb =
-      transTrye {
-        join(mail, mail2Addresses.leftOuter)((m, m2a) =>
-          select(m, m2a) on (m.id === m2a.map(_.mailId))
-        )
-
-//        mail.where(m => m.id === mailId).single
-//        mail.lookup(mailId)
-//        from(mail)(m => where(m.id === mailId) select(m))
-      }
-    mailFromDb match {// getOrElse(error("There is no mail with id = " + mailId))
-      case Right((m,a)) => m get
-      case Left(l) => throw l
+    transTrye {
+      mail.lookup(mailId)
+    } match {
+      case Right(Some(x)) => x
+      case Right(None) => throw new Exception("No mail with given id: "+mailId)
+      case Left(e) => throw e
     }
   }
 
-//  def getAddresses(mailId: Long) =
+  def getAddresses(mailo: Mail) = {
+    transTrye {
+      from(mailo.addresses)(a => select(a)).toList
+    } match {
+      case Right(x)=>
+        x.isEmpty match {
+          case true => throw new Exception("No addresses for given mail id: "+mailo.id)
+          case _ => x
+        }
+      case Left(e) => throw e
+    }
+  }
+
+  def getAttachments(mailo: Mail) = {
+    transTrye {
+      from(mailo.attachments)(a => select(a)).toList
+    } match {
+      case Right(x) => x
+      case Left(e) => throw e
+    }
+  }
+
 }

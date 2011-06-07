@@ -94,14 +94,31 @@ class EtbMailer(configPath: String) {
   def sendFromDb(mailId: Long) = {
 
     try {
-      val mailToSend = db.getMail(mailId)
+      val mailData = db.getMail(mailId)
+      val addressesFromDb = db.getAddresses(mailData)
+      val attachmentsFromDb = db.getAttachments(mailData)
 
-      val from = mailToSend.getFrom
-      val subject = mailToSend.getSubject
-      val textBody = mailToSend.getTextBody
-      val htmlBody = mailToSend.getHtmlBody
+      attachmentsFromDb foreach println
 
-//      val addresses = db.getAddresses
+//
+      val from = mailData.getFrom
+      val subject = mailData.getSubject
+      val textBody = mailData.getTextBody
+      val htmlBody = mailData.getHtmlBody
+
+
+      val addresses =
+        addressesFromDb map{add => {
+            add.fieldType match {
+              case "To" =>
+                To(add.address)
+              case "CC" =>
+                CC(add.address)
+              case "BCC" =>
+                BCC(add.address)
+            }
+          }
+        }
 
       Right("Success")
     }
@@ -120,13 +137,14 @@ import java.security.MessageDigest
 
 object EtbMailer {
 
-  sealed trait MailData
+  sealed trait MailData {
+    val getType = this.getClass.getSimpleName
+  }
 
   case class Subject(subject: String) extends MailData
 
   abstract class EmailAddress extends MailData {
     val address: String
-    val getType = this.getClass.getSimpleName
   }
 
   case class From(address: String) extends EmailAddress
@@ -153,4 +171,3 @@ object EtbMailer {
     lazy val size = body.size
   }
 }
-

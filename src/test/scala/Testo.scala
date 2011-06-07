@@ -28,8 +28,8 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
       val filobajts = FileUtils.readFileToByteArray(new File("r:\\mail-test.pdf"))
       val slikobajts = FileUtils.readFileToByteArray(new File("r:\\mail-test.png"))
 
-      val pdfo = AttachmentFile("testo.pdf", "application/pdf", filobajts)
-      val sliko = AttachmentFile("testo.png", "image/png", slikobajts)
+      val pdfo = AttachmentFile("testo12.pdf", "application/pdf", filobajts)
+      val sliko = AttachmentFile("testo12.png", "image/png", slikobajts)
 
       val text = "ŠĐČĆŽšđčćž akuk  ukukuuukk  kuikzmkizmizik kizikzk ikzikz kizkiz ikzkizki zkk ikz kzikzk zk zki zk zkkiz ikz kuzkuz ukzukzk kzk uzuk zuk  ukz kuz kuzukzk zuk zk zkz kzuk zkzku zkuzkuzkuz ku zk uz ku zku z ukz k"
 
@@ -46,7 +46,7 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
       val etbMailer = new EtbMailer("src/test/resources/mailer.conf")
 
       val inserto = //Right("asdfsfad")
-        etbMailer.sendFromDb(165)
+        etbMailer.sendFromDb(20)
 
 //        etbMailer.send(
 //            From("gordan@element.hr"),
