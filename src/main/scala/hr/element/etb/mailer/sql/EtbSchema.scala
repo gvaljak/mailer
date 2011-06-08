@@ -11,6 +11,8 @@ import hr.element.etb.mailer.EtbMailer._
 
 import scala.xml.XML
 
+import net.liftweb.util.Mailer._
+
 /**
  * Base entity trait defines common fields for all tables
  */
@@ -44,22 +46,18 @@ case class Mail(
     @Column("text_body")
     val textBody : String,
     @Column("html_body")
-    val htmlBody : Option[String]) extends BaseEntity {
+    val htmlBody : String) extends BaseEntity {
 
 
   lazy val addresses: OneToMany[Address] = Etb.mail2Addresses.left(this)
   lazy val attachments = Etb.mail2Attachments.left(this)
 
-  def this() = this("", "", "", Some(""))
+  def this() = this("", "", "", "")
 
   def getFrom = From(sentFrom)
   def getSubject = Subject(subject)
-  def getTextBody = TextBody(textBody)
-  def getHtmlBody =
-    htmlBody match {
-      case Some(h) => Some(HtmlBody(XML.loadString(h)))
-      case _ => None
-    }
+  def getTextBody = PlainMailBodyType(textBody)
+  def getHtmlBody = XHTMLMailBodyType(XML.loadString(htmlBody))
 }
 
 case class Address(

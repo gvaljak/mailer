@@ -1,23 +1,18 @@
 package hr.element.etb.mailer
 
-//import net.liftweb.util.Helpers._
-import net.liftweb.common._
-//import net.liftweb.http._
-//import net.liftweb.util._
-
-//import java.io.File
-//import org.apache.commons.io.FileUtils
-
 import javax.mail._
-//import javax.mail.internet._
 
-
+import net.liftweb.common._
+import net.liftweb.actor.SpecializedLiftActor
 import net.liftweb.util.Mailer
-//import net.liftweb.util.Mailer._
-
-import hr.element.etb.mailer.sql._
+import net.liftweb.util.Mailer._
+import net.liftweb.util.Mailer.MailTypes
 
 import net.lag.configgy.Configgy
+
+import collection.mutable.WrappedArray
+
+import hr.element.etb.mailer.sql._
 
 
 /**
@@ -26,12 +21,11 @@ import net.lag.configgy.Configgy
  *  configPath specifies location of config file
  *  example of config file can be found in src/main/resources
  */
-
-
 class EtbMailer(configPath: String) {
 
   import EtbMailer._
 
+  private val logger = Logger(classOf[EtbMailer])
   lazy val config = getConfig
   lazy val db = getDb
 
@@ -76,31 +70,56 @@ class EtbMailer(configPath: String) {
     })
   }
 
-//  sealed trait MailAttachments
 
-  def send(
-      from: From,
-      subject: Subject,
-      textBody: TextBody,
-      htmlBody: Option[HtmlBody],
-      addresses: Seq[EmailAddress],
-      attachments: Option[Seq[AttachmentFile]]): Either[Exception, _] = {
 
-    db.insertMail(from, subject, textBody, htmlBody, addresses, attachments)
+  protected class MailSender extends SpecializedLiftActor[Long] {
+    protected def messageHandler = {
+      case id =>
+        sendMail(id) match {
+          case Right(x) => logger.error("Mail successfully sent")
+          case Left(e) =>
+            println(e.printStackTrace)
+        }
 
-//    sendMail(from, subject, rest: _*)
+    }
   }
 
-  def sendFromDb(mailId: Long) = {
+
+  protected lazy val mailSender = new MailSender
+
+  def queueMail(
+      from: From,
+      subject: Subject,
+      textBody: PlainMailBodyType,
+      htmlBodyOpt: Option[XHTMLMailBodyType],
+      addresses: Seq[AddressType],
+      attachments: Option[Seq[AttachmentFile]]) = {
+
+    val htmlBody =
+      htmlBodyOpt match {
+        case Some(h) => h
+        case _ =>
+          XHTMLMailBodyType(<pre>{xml.Utility.escape(textBody.text)}</pre>)
+      }
+
+    val id =
+      db.insertMail(from, subject, textBody, htmlBody, addresses, attachments) match {
+        case Right(id) => id
+        case Left(e: Exception) => throw e
+      }
+
+    println(id)
+    mailSender ! id
+  }
+
+
+  def sendMail(mailId: Long) = {
 
     try {
       val mailData = db.getMail(mailId)
       val addressesFromDb = db.getAddresses(mailData)
       val attachmentsFromDb = db.getAttachments(mailData)
 
-      attachmentsFromDb foreach println
-
-//
       val from = mailData.getFrom
       val subject = mailData.getSubject
       val textBody = mailData.getTextBody
@@ -120,6 +139,29 @@ class EtbMailer(configPath: String) {
           }
         }
 
+      val htmlAttach =
+        attachmentsFromDb match {
+          case Some(atts) =>
+            val files =
+              atts map{att =>
+                PlusImageHolder(att.fileName, att.mimeType, att.body)
+              }
+            XHTMLPlusImages(htmlBody.text, files: _*)
+          case None =>
+            XHTMLPlusImages(htmlBody.text)
+        }
+
+//      val mHtmlBody = Mailer.XHTMLPlusImages(htmlBody.)//, mAttachments: _*)
+
+
+//      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ mTextBody :+ mHtmlBody) ++ mAddresses
+      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach) ++ addresses
+
+      Mailer.sendMail(from, subject, mailTypes: _*)
+
+      Thread.sleep(3000)
+      println("asdffsdafsdafsd")
+
       Right("Success")
     }
     catch {
@@ -137,26 +179,29 @@ import java.security.MessageDigest
 
 object EtbMailer {
 
-  sealed trait MailData {
-    val getType = this.getClass.getSimpleName
-  }
+//  implicit def from2from(f: From): Mailer.From = new Mailer.From(f.address)
+//  implicit def subject2subject(s: Subject): Mailer.Subject = new Mailer.Subject(s.subject)
+//  implicit def from2from(f: To): Mailer.To = new Mailer.To(f.address)
+//  implicit def from2from(f: CC): Mailer.CC = new Mailer.CC(f.address)
+//  implicit def from2from(f: BCC): Mailer.BCC = new Mailer.BCC(f.address)
+//
+//  sealed trait MailData {
+//    val getType = this.getClass.getSimpleName
+//  }
+//
+//  case class Subject(subject: String) extends MailData
+//
+//  abstract class EmailAddress extends MailData {
+//    val address: String
+//  }
+//
+//  case class From(address: String) extends EmailAddress
+//  case class To(address: String) extends EmailAddress
+//  case class CC(address: String) extends EmailAddress
+//  case class BCC(address: String) extends EmailAddress
 
-  case class Subject(subject: String) extends MailData
-
-  abstract class EmailAddress extends MailData {
-    val address: String
-  }
-
-  case class From(address: String) extends EmailAddress
-
-  case class To(address: String) extends EmailAddress
-
-  case class CC(address: String) extends EmailAddress
-
-  case class BCC(address: String) extends EmailAddress
-
-  case class TextBody(text: String) extends MailData
-  case class HtmlBody(html: NodeSeq) extends MailData
+//  case class TextBody(text: String) extends MailData
+//  case class HtmlBody(html: NodeSeq) extends MailData
 
   case class AttachmentFile(fileName: String, mimeType: String, bytes: Array[Byte]) {
 

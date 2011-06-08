@@ -1,6 +1,6 @@
 package hr.element.etb.mailer.sql
 
-//import net.liftweb.util.Mailer._
+import net.liftweb.util.Mailer._
 
 
 import java.sql.Timestamp
@@ -39,30 +39,29 @@ trait DbEtb {
     }}
   }
 
-  def createAddressList(addresses: Seq[EmailAddress], mailId: Long, time: Timestamp): Seq[Address] = {
+  def createAddressList(addresses: Seq[AddressType], mailId: Long, time: Timestamp): Seq[Address] = {
     addresses.map{rec =>
-      new Address(mailId, rec.getType, rec.address, time, None, 0)
+      new Address(mailId, rec.getType, rec.adr, time, None, 0)
     }
   }
 
   def insertMail(
       from: From,
       subject: Subject,
-      textBody: TextBody,
-      htmlBody: Option[HtmlBody],
-      addresses: Seq[EmailAddress],
-      attachments: Option[Seq[AttachmentFile]]) = {
+      textBody: PlainMailBodyType,
+      htmlBody: XHTMLMailBodyType,
+      addresses: Seq[AddressType],
+      attachments: Option[Seq[AttachmentFile]]): Either[Exception,Long] = {
 
     transTrye {
       val time = new Timestamp(System.currentTimeMillis)
-      val html = for{h <- htmlBody} yield h.html.toString
-      val newMail = Mail(from.address, subject.subject, textBody.text, html)
+      val newMail = Mail(from.address, subject.subject, textBody.text, htmlBody.text.toString)
 
       mail.insert(newMail)
 
       val addToIns =
         for(add <- addresses) yield {
-          val newAddress = Address(add.getType, add.address, time)
+          val newAddress = Address(add.getType, add.adr, time)
           newMail.addresses.assign(newAddress)
         }
 
@@ -83,7 +82,7 @@ trait DbEtb {
 
       mail2Attachments.insert(attToIns)
 
-      "Success"
+      newMail.id
     }
   }
 
@@ -96,6 +95,9 @@ trait DbEtb {
       case Right(None) => throw new Exception("No mail with given id: "+mailId)
       case Left(e) => throw e
     }
+  }
+
+  def getAddresses(ids: List[Long]) = {
   }
 
   def getAddresses(mailo: Mail) = {
@@ -113,9 +115,20 @@ trait DbEtb {
 
   def getAttachments(mailo: Mail) = {
     transTrye {
-      from(mailo.attachments)(a => select(a)).toList
+      join(mailo.attachments, fileType)((a, ft) =>
+        select(a, ft.mime)
+        on(a.fileExt === ft.ext)).toList
     } match {
-      case Right(x) => x
+      case Right(x) =>
+        x.isEmpty match {
+          case true => None
+          case false =>
+            val attFiles =
+              x.map{
+                att => AttachmentFile(att._1.filename, att._2, att._1.body)
+              }
+            Some(attFiles)
+        }
       case Left(e) => throw e
     }
   }
