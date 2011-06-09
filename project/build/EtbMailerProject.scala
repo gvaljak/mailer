@@ -33,23 +33,24 @@ class EtbMailerProject(info: ProjectInfo) extends DefaultProject(info)
   val liftVersion = "2.4-SNAPSHOT"
   val liftUtil = "net.liftweb" %% "lift-util" % liftVersion % "compile"
 
-  val liftSqueryl = "org.squeryl" %% "squeryl" % "0.9.4"
+  val squeryl = "org.squeryl" %% "squeryl" % "0.9.4"
   val pgJdbc4 = "postgresql" % "postgresql" % "9.0-801.jdbc4"
 
   val configgy = "net.lag" % "configgy" % "2.0.0" intransitive()
 
+  val elementRepo = "Element d.o.o. Ivy Repository" at "http://element.hr/ivy"
+  val retcol = "hr.element.etb.retcol" %% "retcol" % "0.0.16"
+
 //  --------------------------------------------------------------------------
 
   val commonsIo = "commons-io" % "commons-io" % "2.0.1" % "test"
-  val scalaTest = "org.scalatest" %% "scalatest" % "1.6-SNAPSHOT"
+    val scalaTest = "org.scalatest" %% "scalatest" % "1.6-SNAPSHOT"
 
 /*
 //  val configgy = "hr.element.configgy" % "configgy" % "2.0.0"
 
-  val elementRepo = "Element d.o.o. Ivy Repository" at "http://element.hr/ivy"
   val etb = "hr.element.etb" %% "etb" % "0.1.18"
 
-  val retcol = "hr.element.etb.retcol" %% "retcol" % "0.0.16"
   val jodaTime = "joda-time" % "joda-time" % "1.6.2"
 */
 }

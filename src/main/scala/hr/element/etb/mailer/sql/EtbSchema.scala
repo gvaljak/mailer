@@ -60,6 +60,8 @@ case class Mail(
   def getHtmlBody = XHTMLMailBodyType(XML.loadString(htmlBody))
 }
 
+
+
 case class Address(
     @Column("mail_id")
     val mailId: Long,
@@ -111,8 +113,8 @@ object Etb extends Schema {
   val fileType = table[FileType]("file_type")
   val attachment = table[Attachment]("attachment")
   val mail = table[Mail]("mail")
-//  val mail2Attachments = table[Mail2Attachments]("mail2attachments")
   val address = table[Address]("address")
+//  val mail2Attachments = table[Mail2Attachments]("mail2attachments")
 
   val mail2Addresses =
     oneToManyRelation(mail, address).
@@ -120,7 +122,7 @@ object Etb extends Schema {
 
   val mail2Attachments =
     manyToManyRelation(mail, attachment, "mail2attachments").
-      via[Mail2Attachments]((m, a, ma) => (m.id === ma.mailId, a.id === ma.attachmentId))
+      via[Mail2Attachments]((m, a, ma) => (m.id === ma.mailId, ma.attachmentId === a.id ))
 
   on(fileType)(ft => declare(
     ft.id is (primaryKey, autoIncremented("seq_file_type")),

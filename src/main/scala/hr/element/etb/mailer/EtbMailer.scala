@@ -70,17 +70,21 @@ class EtbMailer(configPath: String) {
     })
   }
 
+  sealed trait ToSend
+  case class MailToSend(id: Long) extends ToSend
+  case class AddressToSend(id: Long) extends ToSend
 
 
-  protected class MailSender extends SpecializedLiftActor[Long] {
+  protected class MailSender extends SpecializedLiftActor[ToSend] {
     protected def messageHandler = {
-      case id =>
+      case MailToSend(id) =>
         sendMail(id) match {
           case Right(x) => logger.error("Mail successfully sent")
           case Left(e) =>
             println(e.printStackTrace)
         }
-
+      case AddressToSend(id: Long) =>
+        sendToAddress(id)
     }
   }
 
@@ -90,7 +94,7 @@ class EtbMailer(configPath: String) {
   def queueMail(
       from: From,
       subject: Subject,
-      textBody: PlainMailBodyType,
+      textBody: PlainPlusBodyType,
       htmlBodyOpt: Option[XHTMLMailBodyType],
       addresses: Seq[AddressType],
       attachments: Option[Seq[AttachmentFile]]) = {
@@ -108,8 +112,8 @@ class EtbMailer(configPath: String) {
         case Left(e: Exception) => throw e
       }
 
-    println(id)
-    mailSender ! id
+    mailSender ! MailToSend(id)
+    Right(id)
   }
 
 
@@ -159,14 +163,20 @@ class EtbMailer(configPath: String) {
 
       Mailer.sendMail(from, subject, mailTypes: _*)
 
-      Thread.sleep(3000)
-      println("asdffsdafsdafsd")
+      db.setAllSent(mailId)
+
+      Thread.sleep(1500)
+      println("Mail uspješno poslat!")
 
       Right("Success")
     }
     catch {
       case e: Exception => Left(e)
     }
+  }
+
+  def sendToAddress(id: Long) = {
+    db.getAddresses(List(id))
   }
 
   def error(msg: String) =
@@ -202,6 +212,16 @@ object EtbMailer {
 
 //  case class TextBody(text: String) extends MailData
 //  case class HtmlBody(html: NodeSeq) extends MailData
+
+  implicit def address2type(ad: AddressType) =
+    new {
+      def getAddressTypeName =
+        ad match {
+          case To(_) => "To"
+          case CC(_) => "CC"
+          case BCC(_) => "BCC"
+        }
+    }
 
   case class AttachmentFile(fileName: String, mimeType: String, bytes: Array[Byte]) {
 

@@ -19,8 +19,6 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
   def formatXML(in: Elem) =
     XML.loadString(prettyPrinter.format(in))
 
-
-
   feature("Sending mail with file attachments") {
 
     info("Two files are read, and send as attachments in email")
@@ -46,30 +44,39 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
 
       val html = formatXML(xml)
 
-      when("ETBMailer is initialised and mail is sent")
+      when("ETBMailer is initialised")
+
       val etbMailer = new EtbMailer("src/test/resources/mailer.conf")
 
       def insendMail() =
         etbMailer.queueMail(
             From("gordan@element.hr"),
             Subject("dobar dan"),
-            PlainMailBodyType(text),
+            PlainPlusBodyType(text, "utf8"),
             None, // Some(HtmlBody(xml)),
             Seq(
-              To("cehtunger@gmail.com"),
-              CC("gordan@dreampostcards.com"),
-              BCC("gordan.valjak@zg.t-com.hr")),
-            Some(Seq(pdfo, sliko))
+              To("cehtunger@gmail.com")
+//              CC("gordan@dreampostcards.com")
+//              BCC("gordan.valjak@zg.t-com.hr")
+            ),
+            Some(Seq(sliko))
           )
 
+      and("mail is sent")
       val inserto = //Right("asdfsfad")
-        insendMail()
+//        insendMail()
 //        etbMailer.sendFromDb(25)
+        etbMailer.sendToAddress(210)
 
 
-      then("""Function must return "Success"""")
+      then("""Function must return Right""")
+      inserto.isRight must be === true
 
-      inserto must be === Right()
+      val id =
+        inserto.right.get
+
+      info("""New mail id is: """ +id)
+
     }
   }
 }

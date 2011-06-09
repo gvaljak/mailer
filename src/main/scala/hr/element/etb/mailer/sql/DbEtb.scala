@@ -2,6 +2,7 @@ package hr.element.etb.mailer.sql
 
 import net.liftweb.util.Mailer._
 
+import scala.collection.immutable.IndexedSeqMap
 
 import java.sql.Timestamp
 
@@ -45,10 +46,35 @@ trait DbEtb {
     }
   }
 
+  def setAllSent(mailId: Long) = {
+
+    val time = new Timestamp(System.currentTimeMillis)
+
+    transTrye {
+      update(address)(a =>
+        where(a.mailId === mailId)
+        set(a.sentAt := Some(time))
+      )
+    }
+  }
+
+  def setSent(addressId: Long) = {
+
+    val time = new Timestamp(System.currentTimeMillis)
+
+    transTrye {
+      update(address)(a =>
+        where(a.id === addressId)
+        set(a.sentAt := Some(time))
+      )
+    }
+  }
+
+
   def insertMail(
       from: From,
       subject: Subject,
-      textBody: PlainMailBodyType,
+      textBody: PlainPlusBodyType,
       htmlBody: XHTMLMailBodyType,
       addresses: Seq[AddressType],
       attachments: Option[Seq[AttachmentFile]]): Either[Exception,Long] = {
@@ -61,7 +87,7 @@ trait DbEtb {
 
       val addToIns =
         for(add <- addresses) yield {
-          val newAddress = Address(add.getType, add.adr, time)
+          val newAddress = Address(add.getAddressTypeName, add.adr, time)
           newMail.addresses.assign(newAddress)
         }
 
@@ -97,8 +123,52 @@ trait DbEtb {
     }
   }
 
+
+
+//  def getAddressById(id: Long): Option[Address] =
+//    address.lookup(id)
+
+
   def getAddresses(ids: List[Long]) = {
+
+    transaction{
+
+      inTransaction{
+        address.insert(Address(80, "To", "asfdasdfasdf", new Timestamp(0), None, 0))
+
+      }
+      2/0
+      address.insert(Address(80, "From", "jkhjklhlkj", new Timestamp(0), None, 0))
+    }
+
+
+    Right(true)
+//    val idso = ids head
+//
+//    transTrye {
+//
+//      val addro = address.lookup(idso).get
+//      val mailo = from(addro.mailo)(select(_)) head
+////      val atto =
+////        (join(mailo.attachments, fileType)((a, ft) =>
+////        select(a, ft.mime)
+////        on(a.fileExt === ft.ext))).toList
+//
+//    }
+//
+//    transTrye {
+//      val all =
+//        IndexedSeqMap.empty ++ (from(mail,address)((m,a) =>
+//          where(a.id === idso and m.id === a.mailId)
+//          select(m,a)
+//        ))
+//
+//      println(all)
+//    }
   }
+
+
+
 
   def getAddresses(mailo: Mail) = {
     transTrye {
