@@ -61,7 +61,6 @@ case class Mail(
 }
 
 
-
 case class Address(
     @Column("mail_id")
     val mailId: Long,
@@ -78,7 +77,7 @@ case class Address(
 
   def this() = this(0L, "", "", new Timestamp(0), Some(new Timestamp(0)), 0)
 
-  override def toString = "mailId: "+mailId
+//  override def toString = "mailId: "+mailId
 }
 
 object Address {

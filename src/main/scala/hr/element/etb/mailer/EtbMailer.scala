@@ -1,6 +1,6 @@
 package hr.element.etb.mailer
 
-import javax.mail._
+import javax.mail.{Authenticator, PasswordAuthentication}
 
 import net.liftweb.common._
 import net.liftweb.actor.SpecializedLiftActor
@@ -14,6 +14,7 @@ import collection.mutable.WrappedArray
 
 import hr.element.etb.mailer.sql._
 
+import org.squeryl.PrimitiveTypeMode._
 
 /**
  *  EtbMailer
@@ -78,9 +79,9 @@ class EtbMailer(configPath: String) {
   protected class MailSender extends SpecializedLiftActor[ToSend] {
     protected def messageHandler = {
       case MailToSend(id) =>
-        sendMail(id) match {
+        sendMailById(id) match {
           case Right(x) => logger.error("Mail successfully sent")
-          case Left(e) =>
+          case Left(e: Exception) =>
             println(e.printStackTrace)
         }
       case AddressToSend(id: Long) =>
@@ -99,30 +100,48 @@ class EtbMailer(configPath: String) {
       addresses: Seq[AddressType],
       attachments: Option[Seq[AttachmentFile]]) = {
 
-    val htmlBody =
-      htmlBodyOpt match {
-        case Some(h) => h
-        case _ =>
-          XHTMLMailBodyType(<pre>{xml.Utility.escape(textBody.text)}</pre>)
-      }
+    try {
+      val htmlBody =
+        htmlBodyOpt match {
+          case Some(h) => h
+          case _ =>
+            XHTMLMailBodyType(<pre>{xml.Utility.escape(textBody.text)}</pre>)
+        }
 
-    val id =
-      db.insertMail(from, subject, textBody, htmlBody, addresses, attachments) match {
-        case Right(id) => id
-        case Left(e: Exception) => throw e
-      }
+      val id =
+        db.insertMail(from, subject, textBody, htmlBody, addresses, attachments) match {
+          case Right(id) => id
+          case Left(e: Exception) => throw e
+        }
 
-    mailSender ! MailToSend(id)
-    Right(id)
+      mailSender ! MailToSend(id)
+
+      Right(id)
+    } catch {
+      case e => Left(e)
+    }
+  }
+
+  def sendMailById(mailId: Long): Either[Exception, Unit] = {
+
+    val mailData = db.getMail(mailId)
+
+    println(mailData)
+
+    val addressesFromDb = db.getAddresses(mailData)
+
+    val attachmentsFromDb = db.getAttachments(mailData)
+
+    sendMail(mailData, addressesFromDb.toList, attachmentsFromDb)
+    Right()
   }
 
 
-  def sendMail(mailId: Long) = {
+  def sendMail(mailData: Mail, addressesFromDb: Seq[sql.Address], attachmentsFromDb: Option[Seq[AttachmentFile]]) = {
+
+    println(attachmentsFromDb)
 
     try {
-      val mailData = db.getMail(mailId)
-      val addressesFromDb = db.getAddresses(mailData)
-      val attachmentsFromDb = db.getAttachments(mailData)
 
       val from = mailData.getFrom
       val subject = mailData.getSubject
@@ -155,17 +174,12 @@ class EtbMailer(configPath: String) {
             XHTMLPlusImages(htmlBody.text)
         }
 
-//      val mHtmlBody = Mailer.XHTMLPlusImages(htmlBody.)//, mAttachments: _*)
-
-
-//      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ mTextBody :+ mHtmlBody) ++ mAddresses
       val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach) ++ addresses
 
       Mailer.sendMail(from, subject, mailTypes: _*)
+      db.setAllSent(mailData.id)
 
-      db.setAllSent(mailId)
-
-      Thread.sleep(1500)
+//FIXME: Maknuti jednom
       println("Mail uspješno poslat!")
 
       Right("Success")
@@ -176,7 +190,12 @@ class EtbMailer(configPath: String) {
   }
 
   def sendToAddress(id: Long) = {
-    db.getAddresses(List(id))
+    val addressFromDb = db.getAddressById(id)
+    val mailFromDb = db.getMailByAddress(addressFromDb)
+
+    println(addressFromDb)
+    println(mailFromDb)
+    Right(true)
   }
 
   def error(msg: String) =

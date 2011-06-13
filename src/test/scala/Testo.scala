@@ -29,11 +29,14 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
 
       val filobajts = FileUtils.readFileToByteArray(new File("r:\\mail-test.pdf"))
       val slikobajts = FileUtils.readFileToByteArray(new File("r:\\mail-test.png"))
+      val attobajts = FileUtils.readFileToByteArray(new File("c:\\Users\\Administrator\\Documents\\Google Talk Received Files\\Tournament 3298 06-09-11.lin"))
 
       val pdfo = AttachmentFile("testo.pdf", "application/pdf", filobajts)
       val sliko = AttachmentFile("testo.png", "image/png", slikobajts)
+      val lino = AttachmentFile("mec.lin", "document/lin", attobajts)
 
-      val text = " &&&& <&>>><<<><a></a>ŠĐČĆŽšđčćž akuk  ukukuuukk  kuikzmkizmizik kizikzk ikzikz kizkiz ikzkizki zkk ikz kzikzk zk zki zk zkkiz ikz kuzkuz ukzukzk kzk uzuk zuk  ukz kuz kuzukzk zuk zk zkz kzuk zkzku zkuzkuzkuz ku zk uz ku zku z ukz k"
+//      val text = " &&&& <&>>><<<><a></a>ŠĐČĆŽšđčćž akuk  ukukuuukk  kuikzmkizmizik kizikzk ikzikz kizkiz ikzkizki zkk ikz kzikzk zk zki zk zkkiz ikz kuzkuz ukzukzk kzk uzuk zuk  ukz kuz kuzukzk zuk zk zkz kzuk zkzku zkuzkuzkuz ku zk uz ku zku z ukz k"
+      val text = "Mec"
 
       val xml =
         <span>
@@ -51,7 +54,7 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
       def insendMail() =
         etbMailer.queueMail(
             From("gordan@element.hr"),
-            Subject("dobar dan"),
+            Subject("Sukob titana"),
             PlainPlusBodyType(text, "utf8"),
             None, // Some(HtmlBody(xml)),
             Seq(
@@ -59,23 +62,27 @@ class MailTest extends FeatureSpec with GivenWhenThen with MustMatchers {
 //              CC("gordan@dreampostcards.com")
 //              BCC("gordan.valjak@zg.t-com.hr")
             ),
-            Some(Seq(sliko))
+            None//Some(Seq(lino))
           )
 
       and("mail is sent")
       val inserto = //Right("asdfsfad")
 //        insendMail()
-//        etbMailer.sendFromDb(25)
-        etbMailer.sendToAddress(210)
+        etbMailer.sendMailById(96)
+//        etbMailer.sendToAddress(210)
+
+      inserto match {
+        case Right(id) =>
+          info("""New mail id is: """ +id)
+        case Left(e) =>
+          info("Exception: "+e.getMessage)
+      }
+
 
 
       then("""Function must return Right""")
       inserto.isRight must be === true
 
-      val id =
-        inserto.right.get
-
-      info("""New mail id is: """ +id)
 
     }
   }

@@ -1,5 +1,7 @@
 package hr.element.etb.mailer.sql
 
+import collection.IterableLike
+
 import net.liftweb.util.Mailer._
 
 import scala.collection.immutable.IndexedSeqMap
@@ -19,20 +21,48 @@ trait DbEtb {
   val DbUsername: String
   val DbPassword: String
 
-//  implicit def wrapRichQuery[A,B](q: Query[(A,B)]) =
-//    new {
-//      def bag(f:((A,B)) => B) =
-//        q.toList.groupBy(_._1).mapValues(_.map(f))
-//    }
 
-  def transTrye[T](f: => T): Either[Exception,T] =
+
+  def transTrye[T](f: => T): Either[Exception, T] =
     try transaction {
       Right(f)
     }
     catch {
-      case e: Exception =>
-        Left(e)
+      case e: Exception => Left(e)
     }
+
+  def trans[A <: IterableLike[_,_], B](f: => A)(a: A => B)(t: => B): B = {
+    transTrye {f}
+    match {
+      case Right(x) =>
+        x.isEmpty match {
+          case true => t
+          case _ => a(x)
+        }
+      case Left(e) => throw e
+    }
+  }
+
+  def transGet[T <: IterableLike[_,_]](f: => T)(msg: String) =
+    trans {f} {(x: T) => x} {throw new Exception(msg)}
+
+
+  def transOptGet[T <: IterableLike[_,_]](f: => T) =
+    trans{f} {(x: T) => Some(x):Option[T]} {None:Option[T]}
+
+
+
+  def transGetOne[T](f: => Option[T])(msg: String): T = {
+    transTrye {f}
+      match {
+        case Right(x) =>
+          x match {
+            case Some(s) => s
+            case None => throw new Exception(msg)
+          }
+        case Left(e) => throw e
+    }
+  }
 
   def createAttachments(attachmentList: Option[Seq[AttachmentFile]], mailId: Long, time: Timestamp) = {
     attachmentList map{_.map{att =>
@@ -112,95 +142,40 @@ trait DbEtb {
     }
   }
 
-
   def getMail(mailId: Long) = {
-    transTrye {
+    transGetOne {
       mail.lookup(mailId)
-    } match {
-      case Right(Some(x)) => x
-      case Right(None) => throw new Exception("No mail with given id: "+mailId)
-      case Left(e) => throw e
-    }
+    }("No mail with given id: " + mailId)
   }
-
-
-
-//  def getAddressById(id: Long): Option[Address] =
-//    address.lookup(id)
-
-
-  def getAddresses(ids: List[Long]) = {
-
-    transaction{
-
-      inTransaction{
-        address.insert(Address(80, "To", "asfdasdfasdf", new Timestamp(0), None, 0))
-
-      }
-      2/0
-      address.insert(Address(80, "From", "jkhjklhlkj", new Timestamp(0), None, 0))
-    }
-
-
-    Right(true)
-//    val idso = ids head
-//
-//    transTrye {
-//
-//      val addro = address.lookup(idso).get
-//      val mailo = from(addro.mailo)(select(_)) head
-////      val atto =
-////        (join(mailo.attachments, fileType)((a, ft) =>
-////        select(a, ft.mime)
-////        on(a.fileExt === ft.ext))).toList
-//
-//    }
-//
-//    transTrye {
-//      val all =
-//        IndexedSeqMap.empty ++ (from(mail,address)((m,a) =>
-//          where(a.id === idso and m.id === a.mailId)
-//          select(m,a)
-//        ))
-//
-//      println(all)
-//    }
-  }
-
-
-
 
   def getAddresses(mailo: Mail) = {
-    transTrye {
+    transGet {
       from(mailo.addresses)(a => select(a)).toList
-    } match {
-      case Right(x)=>
-        x.isEmpty match {
-          case true => throw new Exception("No addresses for given mail id: "+mailo.id)
-          case _ => x
-        }
-      case Left(e) => throw e
+    }("No addresses for given mail id: " + mailo.id)
+  }
+
+  def getAddressById(id: Long): Address = {
+    transGetOne {
+      address.lookup(id)
+    }("No address with given id: " + id)
+  }
+
+  def getMailByAddress(addro: Address) = {
+    transOptGet {
+      from(addro.mailo)(m => select(m)).toList
     }
   }
 
-  def getAttachments(mailo: Mail) = {
-    transTrye {
-      join(mailo.attachments, fileType)((a, ft) =>
-        select(a, ft.mime)
-        on(a.fileExt === ft.ext)).toList
-    } match {
-      case Right(x) =>
-        x.isEmpty match {
-          case true => None
-          case false =>
-            val attFiles =
-              x.map{
-                att => AttachmentFile(att._1.filename, att._2, att._1.body)
-              }
-            Some(attFiles)
-        }
-      case Left(e) => throw e
-    }
+
+  def getAttachments(mailo: Mail): Option[Seq[AttachmentFile]] = {
+    val attachments =
+      transOptGet{
+        join(mailo.attachments, fileType)((a, ft) =>
+          select(a, ft.mime)
+          on(a.fileExt === ft.ext)).toMap
+      }
+
+    attachments map{_.map{att => new AttachmentFile(att._1.filename, att._2, att._1.body)} toSeq}
   }
 
 }
