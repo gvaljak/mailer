@@ -23,12 +23,12 @@ trait DbEtb {
 
 
 
-  def transTrye[T](f: => T): Either[Exception, T] =
+  def transTrye[T](f: => T): Either[Throwable, T] =
     try transaction {
       Right(f)
     }
     catch {
-      case e: Exception => Left(e)
+      case e => Left(e)
     }
 
   def trans[A <: IterableLike[_,_], B](f: => A)(a: A => B)(t: => B): B = {
@@ -49,7 +49,6 @@ trait DbEtb {
 
   def transOptGet[T <: IterableLike[_,_]](f: => T) =
     trans{f} {(x: T) => Some(x):Option[T]} {None:Option[T]}
-
 
 
   def transGetOne[T](f: => Option[T])(msg: String): T = {
@@ -76,25 +75,14 @@ trait DbEtb {
     }
   }
 
-  def setAllSent(mailId: Long) = {
+
+  def setSent(ids: Seq[Long]) = {
 
     val time = new Timestamp(System.currentTimeMillis)
 
     transTrye {
       update(address)(a =>
-        where(a.mailId === mailId)
-        set(a.sentAt := Some(time))
-      )
-    }
-  }
-
-  def setSent(addressId: Long) = {
-
-    val time = new Timestamp(System.currentTimeMillis)
-
-    transTrye {
-      update(address)(a =>
-        where(a.id === addressId)
+        where(a.id in ids)
         set(a.sentAt := Some(time))
       )
     }
@@ -107,7 +95,7 @@ trait DbEtb {
       textBody: PlainPlusBodyType,
       htmlBody: XHTMLMailBodyType,
       addresses: Seq[AddressType],
-      attachments: Option[Seq[AttachmentFile]]): Either[Exception,Long] = {
+      attachments: Option[Seq[AttachmentFile]]): Either[Throwable,Long] = {
 
     transTrye {
       val time = new Timestamp(System.currentTimeMillis)
@@ -161,9 +149,9 @@ trait DbEtb {
   }
 
   def getMailByAddress(addro: Address) = {
-    transOptGet {
-      from(addro.mailo)(m => select(m)).toList
-    }
+    transGetOne {
+      Some(addro.mailo.single)
+    }("No mail for given address :" + addro.address)
   }
 
 

@@ -122,24 +122,9 @@ class EtbMailer(configPath: String) {
     }
   }
 
-  def sendMailById(mailId: Long): Either[Exception, Unit] = {
-
-    val mailData = db.getMail(mailId)
-
-    println(mailData)
-
-    val addressesFromDb = db.getAddresses(mailData)
-
-    val attachmentsFromDb = db.getAttachments(mailData)
-
-    sendMail(mailData, addressesFromDb.toList, attachmentsFromDb)
-    Right()
-  }
 
 
   def sendMail(mailData: Mail, addressesFromDb: Seq[sql.Address], attachmentsFromDb: Option[Seq[AttachmentFile]]) = {
-
-    println(attachmentsFromDb)
 
     try {
 
@@ -177,25 +162,35 @@ class EtbMailer(configPath: String) {
       val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach) ++ addresses
 
       Mailer.sendMail(from, subject, mailTypes: _*)
-      db.setAllSent(mailData.id)
+
+      val ids = addressesFromDb map(_.id)
+      db.setSent(ids)
 
 //FIXME: Maknuti jednom
       println("Mail uspješno poslat!")
 
-      Right("Success")
+      Right()
     }
     catch {
       case e: Exception => Left(e)
     }
   }
 
+  def sendMailById(mailId: Long): Either[Exception, Unit] = {
+
+    val mailFromDb = db.getMail(mailId)
+    val addressesFromDb = db.getAddresses(mailFromDb)
+    val attachmentsFromDb = db.getAttachments(mailFromDb)
+
+    sendMail(mailFromDb, addressesFromDb, attachmentsFromDb)
+  }
+
   def sendToAddress(id: Long) = {
     val addressFromDb = db.getAddressById(id)
     val mailFromDb = db.getMailByAddress(addressFromDb)
+    val attachmentsFromDb = db.getAttachments(mailFromDb)
 
-    println(addressFromDb)
-    println(mailFromDb)
-    Right(true)
+    sendMail(mailFromDb, Seq(addressFromDb), attachmentsFromDb)
   }
 
   def error(msg: String) =
