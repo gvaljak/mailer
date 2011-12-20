@@ -114,6 +114,7 @@ class EtbMailer(configPath: String) {
           case Left(e: Exception) => throw e
         }
 
+
       mailSender ! MailToSend(id)
 
       Right(id)
@@ -161,13 +162,13 @@ class EtbMailer(configPath: String) {
 
       val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach) ++ addresses
 
-      Mailer.sendMail(from, subject, mailTypes: _*)
+      Mailer.blockingSendMail(from, subject, mailTypes: _*)
 
       val ids = addressesFromDb map(_.id)
       db.setSent(ids)
 
 //FIXME: Maknuti jednom
-      println("Mail uspješno poslat!")
+      addresses foreach{a => println("Mail uspješno poslat: " + a.adr)}
 
       Right()
     }
@@ -245,7 +246,7 @@ object EtbMailer {
 
     lazy val ExtRegex = """^.*\.([^\.]+)$""".r
     lazy val ExtRegex(ext) = fileName
-    lazy val body = Base64.encodeBase64(bytes)
+    lazy val body = bytes
     lazy val hash = md5(body)
     lazy val size = body.size
   }

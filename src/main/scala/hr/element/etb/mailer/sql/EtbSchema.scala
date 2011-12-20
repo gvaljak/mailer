@@ -112,7 +112,7 @@ object Etb extends Schema {
   val fileType = table[FileType]("file_type")
   val attachment = table[Attachment]("attachment")
   val mail = table[Mail]("mail")
-  val address = table[Address]("address")
+  val address = table[Address]("mail2addresses")
 //  val mail2Attachments = table[Mail2Attachments]("mail2attachments")
 
   val mail2Addresses =
@@ -139,6 +139,6 @@ object Etb extends Schema {
   ))
 
   on(address)(m2ad => declare(
-    m2ad.id is(primaryKey, autoIncremented("seq_address"))
+    m2ad.id is(primaryKey, autoIncremented("seq_mail2addresses"))
   ))
 }
