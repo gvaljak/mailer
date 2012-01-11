@@ -1,0 +1,38 @@
+######################################################
+#              MAILER CONFIGURATION
+######################################################
+
+
+mailer {
+
+  # -- mailer authenication params
+
+  authentication {
+
+    #host = <host_name>
+
+    # -- if port is not  specified default value is used
+
+    # -- if starttls not specified false is assumed.
+    # -- this param can have following values: true,false,yes,no
+    # -- examples: starttls true, starttls = true, starttls no, starttls=no
+    #starttls [=] [false|true]|[yes|no](default false)
+
+    ## -- username and password for authentication
+    #username = <username>
+
+    #password = <password>
+  }
+
+  # -- mailer database params
+
+  db {
+    #host = <host_name>
+
+    #dbname = <dbname>
+
+    #user = <user>
+
+    #password = <password>
+  }
+}
