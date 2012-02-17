@@ -1,6 +1,8 @@
 .classpath
 .project
 .scala_dependencies
+.cache
+.settings
 lib_managed
 project/boot
 project/build/target

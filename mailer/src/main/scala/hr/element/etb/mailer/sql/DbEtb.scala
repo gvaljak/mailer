@@ -71,7 +71,7 @@ trait DbEtb {
 
   def createAddressList(addresses: Seq[AddressType], mailId: Long, time: Timestamp): Seq[Address] = {
     addresses.map{rec =>
-      new Address(mailId, rec.getType, rec.adr, time, None, 0)
+      new Address(mailId, rec.getType, rec.address, time, None, 0)
     }
   }
 
@@ -105,7 +105,7 @@ trait DbEtb {
 
       val addToIns =
         for(add <- addresses) yield {
-          val newAddress = Address(add.getAddressTypeName, add.adr, time)
+          val newAddress = Address(add.getAddressTypeName, add.address, time)
           newMail.addresses.assign(newAddress)
         }
 

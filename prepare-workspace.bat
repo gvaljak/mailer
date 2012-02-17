@@ -1,3 +1,5 @@
-echo Will download all required libraries
-echo Will create Eclipse .project and .classpath files
-sbt update eclipse
+@echo off
+
+echo Performing dependency update for all projects ...
+echo Will also create Eclipse .project and .classpath files ...
+call "%~dp0\sbt.bat" --no-jrebel %* update eclipse

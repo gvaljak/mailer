@@ -108,11 +108,13 @@ class EtbMailer(configPath: String) {
             XHTMLMailBodyType(<pre>{xml.Utility.escape(textBody.text)}</pre>)
         }
 
+
       val id =
         db.insertMail(from, subject, textBody, htmlBody, addresses, attachments) match {
           case Right(id) => id
           case Left(e: Exception) => throw e
         }
+
 
 
       mailSender ! MailToSend(id)
@@ -168,7 +170,7 @@ class EtbMailer(configPath: String) {
       db.setSent(ids)
 
 //FIXME: Maknuti jednom
-      addresses foreach{a => println("Mail uspješno poslat: " + a.adr)}
+      addresses foreach{a => println("Mail uspješno poslat: " + a.address)}
 
       Right()
     }
@@ -232,9 +234,9 @@ object EtbMailer {
     new {
       def getAddressTypeName =
         ad match {
-          case To(_) => "To"
-          case CC(_) => "CC"
-          case BCC(_) => "BCC"
+          case To(_, _) => "To"
+          case CC(_, _) => "CC"
+          case BCC(_, _) => "BCC"
         }
     }
 
