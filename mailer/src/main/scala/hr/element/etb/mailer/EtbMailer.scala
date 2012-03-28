@@ -22,7 +22,7 @@ import org.squeryl.PrimitiveTypeMode._
  *  configPath specifies location of config file
  *  example of config file can be found in src/main/resources
  */
-class EtbMailer(configPath: String) {
+class EtbMailer(configPath: String) extends IEtbMailer{
 
   import EtbMailer._
 
@@ -30,7 +30,7 @@ class EtbMailer(configPath: String) {
   lazy val config = getConfig
   lazy val db = getDb
 
-  configureMail()
+  initMail()
 
   def getConfig = {
     Configgy.configure(configPath)
@@ -50,7 +50,7 @@ class EtbMailer(configPath: String) {
     new DbEtbPostgres(dbHost, dbName, dbUsername, dbPassword)
   }
 
-  def configureMail() {
+  def configureMail() = {
 
     val authParams = config.getConfigMap("mailer.authentication").getOrElse(error("authentication block not specified"))
 
@@ -66,9 +66,9 @@ class EtbMailer(configPath: String) {
     System.setProperty("mail.smtp.port", port) // Enable authentication
     System.setProperty("mail.smtp.host", host) // Enable authentication
     System.setProperty("mail.smtp.auth", "true") // Provide a means for authentication. Pass it a Can, which can either be Full or Empty
-    Mailer.authenticator = Full(new Authenticator {
-      override def getPasswordAuthentication = new PasswordAuthentication(username, password)
-    })
+
+    (username, password)
+
   }
 
   sealed trait ToSend
@@ -127,57 +127,6 @@ class EtbMailer(configPath: String) {
 
 
 
-  def sendMail(mailData: Mail, addressesFromDb: Seq[sql.Address], attachmentsFromDb: Option[Seq[AttachmentFile]]) = {
-
-    try {
-
-      val from = mailData.getFrom
-      val subject = mailData.getSubject
-      val textBody = mailData.getTextBody
-      val htmlBody = mailData.getHtmlBody
-
-
-      val addresses =
-        addressesFromDb map{add => {
-            add.fieldType match {
-              case "To" =>
-                To(add.address)
-              case "CC" =>
-                CC(add.address)
-              case "BCC" =>
-                BCC(add.address)
-            }
-          }
-        }
-
-      val htmlAttach =
-        attachmentsFromDb match {
-          case Some(atts) =>
-            val files =
-              atts map{att =>
-                PlusImageHolder(att.fileName, att.mimeType, att.body)
-              }
-            XHTMLPlusImages(htmlBody.text, files: _*)
-          case None =>
-            XHTMLPlusImages(htmlBody.text)
-        }
-
-      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach) ++ addresses
-
-      Mailer.blockingSendMail(from, subject, mailTypes: _*)
-
-      val ids = addressesFromDb map(_.id)
-      db.setSent(ids)
-
-//FIXME: Maknuti jednom
-      addresses foreach{a => println("Mail uspješno poslat: " + a.address)}
-
-      Right()
-    }
-    catch {
-      case e: Exception => Left(e)
-    }
-  }
 
   def sendMailById(mailId: Long): Either[Exception, Unit] = {
 
@@ -240,16 +189,6 @@ object EtbMailer {
         }
     }
 
-  case class AttachmentFile(fileName: String, mimeType: String, bytes: Array[Byte]) {
-
-    def md5(bytes: Array[Byte]): Array[Byte] = {
-      MessageDigest.getInstance("MD5").digest(bytes)
-    }
-
-    lazy val ExtRegex = """^.*\.([^\.]+)$""".r
-    lazy val ExtRegex(ext) = fileName
-    lazy val body = bytes
-    lazy val hash = md5(body)
-    lazy val size = body.size
-  }
+  case class AttachmentFile(val fileName: String, val mimeType: String, bytes: Array[Byte])
+    extends IAttachmentFile
 }

@@ -1,4 +1,6 @@
-package hr.element.etb.mailer.sql
+package hr.element.etb
+package mailer
+package sql
 
 import org.squeryl.{ Schema, KeyedEntity }
 import org.squeryl.PrimitiveTypeMode._
@@ -46,18 +48,13 @@ case class Mail(
     @Column("text_body")
     val textBody : String,
     @Column("html_body")
-    val htmlBody : String) extends BaseEntity {
+    val htmlBody : String) extends BaseEntity with IMail {
 
 
   lazy val addresses: OneToMany[Address] = Etb.mail2Addresses.left(this)
   lazy val attachments = Etb.mail2Attachments.left(this)
 
   def this() = this("", "", "", "")
-
-  def getFrom = From(sentFrom)
-  def getSubject = Subject(subject)
-  def getTextBody = PlainMailBodyType(textBody)
-  def getHtmlBody = XHTMLMailBodyType(XML.loadString(htmlBody))
 }
 
 
@@ -71,7 +68,7 @@ case class Address(
     val queuedAt: Timestamp,
     @Column("sent_at")
     val sentAt: Option[Timestamp],
-    val bounced: Int) extends BaseEntity {
+    val bounced: Int) extends BaseEntity with IAddress {
 
   lazy val mailo: ManyToOne[Mail] = Etb.mail2Addresses.right(this)
 

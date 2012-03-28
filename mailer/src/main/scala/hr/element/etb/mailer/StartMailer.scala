@@ -18,15 +18,17 @@ object StartMailer {
       XML.loadString(prettyPrinter.format(in))
 
     val mailFromFile =
-      scala.io.Source.fromFile("""src/main/resources/fakulteti-dopis.html""")(io.Codec.UTF8).mkString
+      scala.io.Source.fromFile("""src/main/resources/email-body.html""")(io.Codec.UTF8).mkString
 
     val addr = io.Source.fromFile("""src/main/resources/adrese_fix.txt""")(io.Codec.UTF8).getLines()
 
 //    val text = FileUtils.readFileToString(new File("""src/main/resources/tekst.txt"""), "utf8")
-    val attFile = io.Source.fromFile("""src/main/resources/924-Ornik-letak.jpg""")(scala.io.Codec.ISO8859).map(_.toByte).toArray
+//    val attFile = io.Source.fromFile("""src/main/resources/11192-Jolic-Fizika-novo.jpg""")(scala.io.Codec.ISO8859).map(_.toByte).toArray
+    val attFile2 = io.Source.fromFile("""src/main/resources/11192-Jolic-Fizika-novo.pdf""")(scala.io.Codec.ISO8859).map(_.toByte).toArray
 
 
-    val att = AttachmentFile("924-Ornik-letak.jpg", "image/jpg", attFile)
+//    val att = AttachmentFile("11192-Jolic-Fizika-novo.jpg", "image/jpg", attFile)
+    val att2 = AttachmentFile("11192-Jolic-Fizika-novo.pdf", "application/pdf", attFile2)
 
     val etbMailer = new EtbMailer("src/main/resources/mailer.conf")
 
@@ -53,7 +55,7 @@ object StartMailer {
         def insendMail() =
           etbMailer.queueMail(
               From("element@element.hr"),
-              Subject("Knjižničarima i studentima"),
+              Subject("""Knjižničarima i suradnicima- nova "Zbrika zadataka iz fizike za 7. i 8. razred""""),
               PlainPlusBodyType(mailFromFile, "utf8"),
               Some(XHTMLMailBodyType(xml)),
               Seq(
@@ -63,7 +65,7 @@ object StartMailer {
   //              BCC("gordan@dreampostcards.com"),
   //              BCC("cehtunger@gmail.com")
               ),
-              Some(Seq(att))
+              Some(Seq(att2))
             )
 
         val inserto = //Right("asdfsfad")

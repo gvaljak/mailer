@@ -1,4 +1,6 @@
-package hr.element.etb.mailer.sql
+package hr.element.etb
+package mailer
+package sql
 
 import collection.IterableLike
 
@@ -15,13 +17,7 @@ import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Query
 
 
-trait DbEtb {
-  val DbHost: String
-  val DbName: String
-  val DbUsername: String
-  val DbPassword: String
-
-
+trait DbEtb extends IDbEtb {
 
   def transTrye[T](f: => T): Either[Throwable, T] =
     try transaction {
@@ -95,7 +91,7 @@ trait DbEtb {
       textBody: PlainPlusBodyType,
       htmlBody: XHTMLMailBodyType,
       addresses: Seq[AddressType],
-      attachments: Option[Seq[AttachmentFile]]): Either[Throwable,Long] = {
+      attachments: Option[Seq[IAttachmentFile]]): Either[Throwable,Long] = {
 
     transTrye {
       val time = new Timestamp(System.currentTimeMillis)
