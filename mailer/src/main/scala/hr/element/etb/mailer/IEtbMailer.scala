@@ -11,13 +11,23 @@ import javax.mail.PasswordAuthentication
 trait IEtbMailer {
   val db: IDbEtb
 
-  protected def configureMail(): (String, String)
+  val host: String
+  val port: String
+  val starttls: String
+  val username: String
+  val password: String
+
 
   protected def initMail(): Unit = {
-    val data = configureMail()
+    // Enable TLS support
+    System.setProperty("mail.smtp.starttls.enable",starttls)
+    //Set the host name
+    System.setProperty("mail.smtp.port", port) // Enable authentication
+    System.setProperty("mail.smtp.host", host) // Enable authentication
+    System.setProperty("mail.smtp.auth", "true") // Provide a means for authentication. Pass it a Can, which can either be Full or Empty
 
     Mailer.authenticator = Full(new Authenticator {
-      override def getPasswordAuthentication = new PasswordAuthentication(data._1, data._2)
+      override def getPasswordAuthentication = new PasswordAuthentication(username, password)
     })
   }
 

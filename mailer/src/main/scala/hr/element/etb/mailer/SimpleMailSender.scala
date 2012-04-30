@@ -16,29 +16,15 @@ case class SimpleAttachment(
   val mimeType: String,
   val bytes: Array[Byte]) extends IAttachmentFile
 
-class SimpleMailSender extends IEtbMailer {
+class SimpleMailSender(
+    val host: String,
+    val port: String,
+    val starttls: String,
+    val username: String,
+    val password: String) extends IEtbMailer {
 
   lazy val db = null
 
   initMail()
-
-  def configureMail() = {
-
-    val host = ""
-    val port = "25"
-    val starttls = "false"
-    val username = ""
-    val password = ""
-
-    // Enable TLS support
-    System.setProperty("mail.smtp.starttls.enable",starttls)
-    //Set the host name
-    System.setProperty("mail.smtp.port", port) // Enable authentication
-    System.setProperty("mail.smtp.host", host) // Enable authentication
-    System.setProperty("mail.smtp.auth", "true") // Provide a means for authentication. Pass it a Can, which can either be Full or Empty
-
-    (username, password)
-
-  }
 
 }

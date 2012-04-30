@@ -30,6 +30,15 @@ class EtbMailer(configPath: String) extends IEtbMailer{
   lazy val config = getConfig
   lazy val db = getDb
 
+  val authParams = config.getConfigMap("mailer.authentication").getOrElse(error("authentication block not specified"))
+
+  val host = authParams.getString("host").getOrElse(error("value auth.host not specified"))
+  val port = authParams.getString("port").getOrElse("25")
+  val starttls = authParams.getBool("starttls").getOrElse(false).toString
+  val username = authParams.getString("username").getOrElse(error("value db.password not specified!"))
+  val password = authParams.getString("password").getOrElse(error("value db.password not specified!"))
+
+
   initMail()
 
   def getConfig = {
@@ -48,27 +57,6 @@ class EtbMailer(configPath: String) extends IEtbMailer{
 //    println(dbHost, dbName, dbUsername, dbPassword)
 
     new DbEtbPostgres(dbHost, dbName, dbUsername, dbPassword)
-  }
-
-  def configureMail() = {
-
-    val authParams = config.getConfigMap("mailer.authentication").getOrElse(error("authentication block not specified"))
-
-    val host = authParams.getString("host").getOrElse(error("value auth.host not specified"))
-    val port = authParams.getString("port").getOrElse("25")
-    val starttls = authParams.getBool("starttls").getOrElse(false).toString
-    val username = authParams.getString("username").getOrElse(error("value db.password not specified!"))
-    val password = authParams.getString("password").getOrElse(error("value db.password not specified!"))
-
-    // Enable TLS support
-    System.setProperty("mail.smtp.starttls.enable",starttls)
-    //Set the host name
-    System.setProperty("mail.smtp.port", port) // Enable authentication
-    System.setProperty("mail.smtp.host", host) // Enable authentication
-    System.setProperty("mail.smtp.auth", "true") // Provide a means for authentication. Pass it a Can, which can either be Full or Empty
-
-    (username, password)
-
   }
 
   sealed trait ToSend
