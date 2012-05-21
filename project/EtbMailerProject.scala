@@ -6,7 +6,7 @@ object BuildSettings {
 
   val bsEtbMailer = scalaSettings ++ Seq(
     name    := "etb-mailer",
-    version := "0.2.0"
+    version := "0.2.2"
   )
 }
 
@@ -29,7 +29,7 @@ object Dependencies {
   val iorc = "hr.element.etb" %% "iorc" % "0.0.21"
 
   val commonsIo = "commons-io" % "commons-io" % "2.0.1" % "test"
-  val scalaTest = "org.scalatest" %% "scalatest" % "1.6-SNAPSHOT"
+  val scalaTest = "org.scalatest" %% "scalatest" % "1.7.2" % "test"
 
   val jodaTime = Seq(
     "org.joda" % "joda-convert" % "1.2",
@@ -52,6 +52,7 @@ object ProjectDeps {
   , configgy
 
   , iorc
+  , scalaTest
   )
 
 }

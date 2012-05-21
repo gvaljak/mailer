@@ -50,6 +50,7 @@ case class Mail(
     @Column("html_body")
     val htmlBody : String) extends BaseEntity with IMail {
 
+  val replyTo = None
 
   lazy val addresses: OneToMany[Address] = Etb.mail2Addresses.left(this)
   lazy val attachments = Etb.mail2Attachments.left(this)

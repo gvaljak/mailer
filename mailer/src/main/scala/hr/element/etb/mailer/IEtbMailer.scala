@@ -39,6 +39,7 @@ trait IEtbMailer {
       val subject = mailData.getSubject
       val textBody = mailData.getTextBody
       val htmlBody = mailData.getHtmlBody
+      val replyTo = mailData.getReplyTo
 
 
       val addresses: Seq[AddressType] =
@@ -66,7 +67,9 @@ trait IEtbMailer {
             XHTMLPlusImages(htmlBody.text)
         }
 
-      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach) ++ addresses
+      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach :+ replyTo) ++ addresses
+
+      mailTypes.foreach(println)
 
       Mailer.blockingSendMail(from, subject, mailTypes: _*)
 

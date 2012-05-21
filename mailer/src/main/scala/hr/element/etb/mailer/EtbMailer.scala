@@ -1,20 +1,21 @@
 package hr.element.etb.mailer
 
-import javax.mail.{Authenticator, PasswordAuthentication}
-
-import net.liftweb.common._
-import net.liftweb.actor.SpecializedLiftActor
-import net.liftweb.util.Mailer
-import net.liftweb.util.Mailer._
-import net.liftweb.util.Mailer.MailTypes
-
+import EtbMailer.AttachmentFile
+import hr.element.etb.mailer.sql.DbEtbPostgres
+import hr.element.etb.mailer.EtbMailer
+import hr.element.etb.mailer.IAttachmentFile
+import hr.element.etb.mailer.IEtbMailer
 import net.lag.configgy.Configgy
-
-import collection.mutable.WrappedArray
-
-import hr.element.etb.mailer.sql._
-
-import org.squeryl.PrimitiveTypeMode._
+import net.liftweb.actor.SpecializedLiftActor
+import net.liftweb.common.Logger
+import net.liftweb.util.Mailer.AddressType
+import net.liftweb.util.Mailer.BCC
+import net.liftweb.util.Mailer.CC
+import net.liftweb.util.Mailer.From
+import net.liftweb.util.Mailer.PlainPlusBodyType
+import net.liftweb.util.Mailer.Subject
+import net.liftweb.util.Mailer.To
+import net.liftweb.util.Mailer.XHTMLMailBodyType
 
 /**
  *  EtbMailer
@@ -137,9 +138,7 @@ class EtbMailer(configPath: String) extends IEtbMailer{
     throw new Error(msg)
 }
 
-import scala.xml.NodeSeq
-import org.apache.commons.codec.binary.Base64
-import java.security.MessageDigest
+
 
 object EtbMailer {
 

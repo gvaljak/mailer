@@ -9,10 +9,16 @@ trait IMail {
   val subject : String
   val textBody : String
   val htmlBody : String
+  val replyTo : Option[String]
 
 
   def getFrom = From(sentFrom)
   def getSubject = Subject(subject)
+  def getReplyTo =
+    replyTo match {
+      case Some(rTAddr) => ReplyTo(rTAddr)
+      case _ => ReplyTo(sentFrom)
+    }
   def getTextBody = PlainMailBodyType(textBody)
   def getHtmlBody = XHTMLMailBodyType(XML.loadString(htmlBody))
 }

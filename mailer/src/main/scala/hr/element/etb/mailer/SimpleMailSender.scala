@@ -5,7 +5,8 @@ case class SimpleMail(
   val sentFrom : String,
   val subject : String,
   val textBody : String,
-  val htmlBody : String) extends IMail
+  val htmlBody : String,
+  val replyTo: Option[String] = None) extends IMail
 
 case class SimpleAddress(
   val fieldType: String,
