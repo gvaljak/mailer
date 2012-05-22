@@ -7,6 +7,8 @@ import net.liftweb.common.Full
 import javax.mail.Authenticator
 import javax.mail.PasswordAuthentication
 
+import scala.xml._
+
 
 trait IEtbMailer {
   val db: IDbEtb
@@ -55,19 +57,20 @@ trait IEtbMailer {
           }
         }
 
-      val htmlAttach =
+      val htmlAttach: Option[MailBodyType] =
         attachmentsFromDb match {
           case Some(atts) =>
+            val html = htmlBody.map(_.text).getOrElse(<p>{textBody}</p>)
             val files =
               atts map{att =>
                 PlusImageHolder(att.fileName, att.mimeType, att.body)
               }
-            XHTMLPlusImages(htmlBody.text, files: _*)
+            Some(XHTMLPlusImages(html, files: _*))
           case None =>
-            XHTMLPlusImages(htmlBody.text)
+            htmlBody
         }
 
-      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody :+ htmlAttach :+ replyTo) ++ addresses
+      val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody) ++ addresses ++ htmlAttach ++ replyTo
 
       mailTypes.foreach(println)
 

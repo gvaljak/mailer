@@ -1,12 +1,14 @@
 package hr.element.etb
 package mailer
 
+import scala.xml.NodeSeq
+
 case class SimpleMail(
   val sentFrom : String,
   val subject : String,
   val textBody : String,
-  val htmlBody : String,
-  val replyTo: Option[String] = None) extends IMail
+  val htmlBody : Option[NodeSeq],
+  val replyTo: Option[String]) extends IMail
 
 case class SimpleAddress(
   val fieldType: String,

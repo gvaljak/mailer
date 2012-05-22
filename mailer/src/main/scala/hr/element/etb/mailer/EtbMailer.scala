@@ -2,9 +2,6 @@ package hr.element.etb.mailer
 
 import EtbMailer.AttachmentFile
 import hr.element.etb.mailer.sql.DbEtbPostgres
-import hr.element.etb.mailer.EtbMailer
-import hr.element.etb.mailer.IAttachmentFile
-import hr.element.etb.mailer.IEtbMailer
 import net.lag.configgy.Configgy
 import net.liftweb.actor.SpecializedLiftActor
 import net.liftweb.common.Logger
