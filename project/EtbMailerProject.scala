@@ -6,7 +6,7 @@ object BuildSettings {
 
   val bsEtbMailer = scalaSettings ++ Seq(
     name    := "etb-mailer",
-    version := "0.2.4"
+    version := "0.3.0"
   )
 }
 
