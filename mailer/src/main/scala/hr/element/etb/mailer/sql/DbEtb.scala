@@ -4,7 +4,6 @@ package sql
 
 import collection.IterableLike
 
-import net.liftweb.util.Mailer._
 
 import scala.collection.immutable.IndexedSeqMap
 
@@ -16,6 +15,7 @@ import Etb._
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Query
 
+import Mailer._
 
 trait DbEtb extends IDbEtb {
 
@@ -101,7 +101,7 @@ trait DbEtb extends IDbEtb {
 
       val addToIns =
         for(add <- addresses) yield {
-          val newAddress = Address(add.getAddressTypeName, add.address, time)
+          val newAddress = Address(add.name.open_!, add.address, time)
           newMail.addresses.assign(newAddress)
         }
 

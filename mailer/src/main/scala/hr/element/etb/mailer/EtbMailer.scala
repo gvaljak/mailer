@@ -1,18 +1,12 @@
-package hr.element.etb.mailer
+package hr.element.etb
+package mailer
 
 import EtbMailer.AttachmentFile
 import hr.element.etb.mailer.sql.DbEtbPostgres
 import net.lag.configgy.Configgy
 import net.liftweb.actor.SpecializedLiftActor
 import net.liftweb.common.Logger
-import net.liftweb.util.Mailer.AddressType
-import net.liftweb.util.Mailer.BCC
-import net.liftweb.util.Mailer.CC
-import net.liftweb.util.Mailer.From
-import net.liftweb.util.Mailer.PlainPlusBodyType
-import net.liftweb.util.Mailer.Subject
-import net.liftweb.util.Mailer.To
-import net.liftweb.util.Mailer.XHTMLMailBodyType
+import Mailer._
 
 /**
  *  EtbMailer
@@ -91,7 +85,7 @@ class EtbMailer(configPath: String) extends IEtbMailer{
         htmlBodyOpt match {
           case Some(h) => h
           case _ =>
-            XHTMLMailBodyType(<pre>{xml.Utility.escape(textBody.text)}</pre>)
+            XHTMLMailBodyType("<pre>" + xml.Utility.escape(textBody.text) + "</pre>")
         }
 
 

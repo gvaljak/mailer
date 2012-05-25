@@ -1,14 +1,14 @@
 package hr.element.etb
 package mailer
 
-import net.liftweb.util.Mailer._
+import Mailer._
 import scala.xml.NodeSeq
 
 trait IMail {
   val sentFrom : String
   val subject : String
   val textBody : String
-  val htmlBody : Option[NodeSeq]
+  val htmlBody : Option[String]
   val replyTo : Option[String]
 
 

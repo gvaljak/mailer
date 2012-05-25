@@ -1,7 +1,7 @@
 package hr.element.etb
 package mailer
 
-import net.liftweb.util.Mailer._
+import Mailer._
 
 trait IDbEtb {
   val DbHost: String

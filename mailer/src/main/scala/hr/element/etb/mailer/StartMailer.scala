@@ -4,7 +4,7 @@ import java.io.{File}
 import scala.xml._
 import hr.element.etb.mailer._
 import EtbMailer._
-import net.liftweb.util.Mailer._
+import Mailer._
 //import java.io.BufferedWriter
 //import java.io.FileWriter
 
@@ -48,7 +48,6 @@ object StartMailer {
         println("address: " + address)
 
 //        val mailWithName = mailFromFile.replaceAll("""\[NAME\]""", name)
-        val xml = XML.loadString(mailFromFile)
 
         //val html = formatXML(xml)
 
@@ -57,7 +56,7 @@ object StartMailer {
               From("element@element.hr"),
               Subject("""Knjižničarima i suradnicima- nova "Zbrika zadataka iz fizike za 7. i 8. razred""""),
               PlainPlusBodyType(mailFromFile, "utf8"),
-              Some(XHTMLMailBodyType(xml)),
+              Some(XHTMLMailBodyType(mailFromFile)),
               Seq(
                   To(address)
   //              CC("gordan@dreampostcards.com"),

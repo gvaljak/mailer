@@ -1,4 +1,6 @@
-package hr.element.etb.mailer.sql
+package hr.element.etb
+package mailer
+package sql
 
 import org.squeryl.{ Session, Schema, SessionFactory }
 import org.squeryl.adapters.PostgreSqlAdapter

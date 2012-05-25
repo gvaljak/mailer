@@ -1,8 +1,7 @@
 package hr.element.etb
 package mailer
 
-import net.liftweb.util.Mailer
-import net.liftweb.util.Mailer._
+import Mailer._
 import net.liftweb.common.Full
 import javax.mail.Authenticator
 import javax.mail.PasswordAuthentication
@@ -60,7 +59,7 @@ trait IEtbMailer {
       val htmlAttach: Option[MailBodyType] =
         attachmentsFromDb match {
           case Some(atts) =>
-            val html = htmlBody.map(_.text).getOrElse(<pre>{textBody.text}</pre>)
+            val html = htmlBody.map(_.text).getOrElse("<pre>" + textBody.text + "</pre>")
             val files =
               atts map{att =>
                 PlusImageHolder(att.fileName, att.mimeType, att.body)
