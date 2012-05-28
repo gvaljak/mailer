@@ -6,7 +6,7 @@ object BuildSettings {
 
   val bsEtbMailer = scalaSettings ++ Seq(
     name    := "etb-mailer",
-    version := "0.3.0"
+    version := "0.3.1"
   )
 }
 
@@ -28,6 +28,7 @@ object Dependencies {
 
   val iorc = "hr.element.etb" %% "iorc" % "0.0.21"
 
+  val scalaIo = "com.github.scala-incubator.io" %% "scala-io-file" % "0.3.0"
   val commonsIo = "commons-io" % "commons-io" % "2.0.1" % "test"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.7.2" % "test"
 
@@ -46,6 +47,7 @@ object ProjectDeps {
   val depsEtbMailer = libDeps(
     liftUtil
 
+  , scalaIo
   , squeryl
   , pgJdbc4
 

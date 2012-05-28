@@ -86,6 +86,9 @@ trait Mailer extends SimpleInjector {
    */
   var customProperties: Map[String, String] = Map()
 
+  System.setProperty("mail.mime.encodefilename", "true")
+  System.setProperty("mail.mime.decodefilename", "true")
+
   lazy val jndiSession: Box[Session] =
   for{
     name <- jndiName
@@ -263,35 +266,35 @@ trait Mailer extends SimpleInjector {
    * add custom MailBodyTypes
    */
   protected def buildMailBody(tab: MailBodyType): BodyPart = {
+
     val bp = new MimeBodyPart
-          tab match {
-            case PlainMailBodyType(txt) => bp.setText(txt, "UTF-8")
-            case PlainPlusBodyType(txt, charset) => bp.setText(txt, charset)
-            case XHTMLMailBodyType(html) => bp.setContent(encodeHtmlBodyPart(<a/>), "text/html; charset=" + charSet)
-            case XHTMLPlusImages(html, img@_*) =>
-              val html_mp = new MimeMultipart("related")
-              val bp2 = new MimeBodyPart
-              bp2.setContent(html, "text/html; charset=" + charSet)
-              html_mp.addBodyPart(bp2)
-              img.foreach {
-                i =>
-                val rel_bpi = new MimeBodyPart
-                rel_bpi.setFileName(i.name)
-                rel_bpi.setContentID(i.name)
-                rel_bpi.setDisposition("inline")
-                rel_bpi.setDataHandler(new javax.activation.DataHandler(new javax.activation.DataSource {
-                      def getContentType = i.mimeType
-
-                      def getInputStream = new java.io.ByteArrayInputStream(i.bytes)
-
-                      def getName = i.name
-
-                      def getOutputStream = throw new java.io.IOException("Unable to write to item")
-                    }))
-                html_mp.addBodyPart(rel_bpi)
-              }
-              bp.setContent(html_mp)
-          }
+    tab match {
+      case PlainMailBodyType(txt) => bp.setText(txt, "UTF-8")
+      case PlainPlusBodyType(txt, charset) => bp.setText(txt, charset)
+      case XHTMLMailBodyType(html) => bp.setContent(encodeHtmlBodyPart(<a/>), "text/html; charset=" + charSet)
+      case XHTMLPlusImages(html, img@_*) =>
+        val html_mp = new MimeMultipart("related")
+        val bp2 = new MimeBodyPart
+        bp2.setContent(html, "text/html; charset=" + charSet)
+        html_mp.addBodyPart(bp2)
+        img.foreach { i =>
+//          println("FILENAME: " + i.name)
+          val rel_bpi = new MimeBodyPart
+          rel_bpi.setFileName(i.name)
+          rel_bpi.setContentID(i.name)
+          rel_bpi.setDisposition("inline")
+          rel_bpi.setDataHandler(new javax.activation.DataHandler(
+                new javax.activation.DataSource {
+                  def getContentType = i.mimeType
+                  def getInputStream = new java.io.ByteArrayInputStream(i.bytes)
+                  def getName = i.name
+                  def getOutputStream = throw new java.io.IOException("Unable to write to item")
+                }
+            ))
+          html_mp.addBodyPart(rel_bpi)
+        }
+        bp.setContent(html_mp)
+    }
     bp
   }
 
