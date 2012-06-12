@@ -72,7 +72,7 @@ trait IEtbMailer {
 
       val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody) ++ addresses ++ htmlAttach ++ replyTo
 
-      mailTypes.foreach(println)
+      //mailTypes.foreach(println)
 
       Mailer.blockingSendMail(from, subject, mailTypes: _*)
 
