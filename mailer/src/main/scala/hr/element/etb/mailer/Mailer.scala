@@ -271,7 +271,7 @@ trait Mailer extends SimpleInjector {
     tab match {
       case PlainMailBodyType(txt) => bp.setText(txt, "UTF-8")
       case PlainPlusBodyType(txt, charset) => bp.setText(txt, charset)
-      case XHTMLMailBodyType(html) => bp.setContent(encodeHtmlBodyPart(<a/>), "text/html; charset=" + charSet)
+      case XHTMLMailBodyType(html) => bp.setContent(html, "text/html; charset=" + charSet)
       case XHTMLPlusImages(html, img@_*) =>
         val html_mp = new MimeMultipart("related")
         val bp2 = new MimeBodyPart

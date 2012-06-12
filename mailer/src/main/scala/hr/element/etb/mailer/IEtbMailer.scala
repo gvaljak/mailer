@@ -69,6 +69,7 @@ trait IEtbMailer {
             htmlBody
         }
 
+
       val mailTypes: Array[MailTypes] = (Array.empty[MailTypes] :+ textBody) ++ addresses ++ htmlAttach ++ replyTo
 
       mailTypes.foreach(println)
